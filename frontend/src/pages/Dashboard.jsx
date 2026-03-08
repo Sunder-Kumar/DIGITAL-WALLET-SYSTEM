@@ -181,7 +181,7 @@ const Dashboard = () => {
                                         {isSender ? '↗️' : '↙️'}
                                     </div>
                                     <div className="txn-info">
-                                        <div style={{ fontWeight: '700' }}>{isSender ? 'Sent to' : 'From'} {txn.other_party_email}</div>
+                                        <div style={{ fontWeight: '700' }}>{isSender ? 'To' : 'From'} {txn.display_name}</div>
                                         <small style={{ color: 'var(--text-muted)' }}>{new Date(txn.timestamp).toLocaleDateString()}</small>
                                     </div>
                                     <div className="txn-amount" style={{ color: isSender ? 'var(--text-main)' : 'var(--secondary)' }}>

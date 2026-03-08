@@ -203,7 +203,8 @@ exports.getTransactions = async (req, res) => {
         const walletId = wallet[0].wallet_id;
         
         const [transactions] = await db.query(
-            `SELECT t.*, u.email as other_party_email 
+            `SELECT t.*, u.email as other_party_email,
+             COALESCE(u.email, t.note, t.transaction_type) as display_name
              FROM Transactions t
              LEFT JOIN Wallets w_sender ON t.sender_wallet_id = w_sender.wallet_id
              LEFT JOIN Wallets w_receiver ON t.receiver_wallet_id = w_receiver.wallet_id

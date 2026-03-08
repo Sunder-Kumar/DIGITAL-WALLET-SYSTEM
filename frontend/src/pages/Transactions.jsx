@@ -53,7 +53,7 @@ const Transactions = () => {
                                     {isSender ? '📤' : '📥'}
                                 </div>
                                 <div className="txn-info">
-                                    <div style={{ fontWeight: '700', fontSize: '15px' }}>{isSender ? 'To ' : 'From '}{txn.other_party_email}</div>
+                                    <div style={{ fontWeight: '700', fontSize: '15px' }}>{isSender ? 'To ' : 'From '}{txn.display_name}</div>
                                     <small style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{new Date(txn.timestamp).toLocaleString()}</small>
                                     {txn.status === 'flagged' && <span style={{ color: 'orange', fontSize: '10px', display: 'block' }}>⚠️ FLAGGED</span>}
                                 </div>
