@@ -14,10 +14,13 @@ const Layout = ({ children }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [selectedNotif, setSelectedNotif] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [showAdditional, setShowAdditional] = useState(false);
 
   const notifRef = useRef(null);
   const searchRef = useRef(null);
+  const detailRef = useRef(null);
   
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -32,6 +35,10 @@ const Layout = ({ children }) => {
       }
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setIsSearching(false);
+      }
+      if (detailRef.current && !detailRef.current.contains(event.target)) {
+        setSelectedNotif(null);
+        setShowAdditional(false);
       }
     };
 
@@ -178,7 +185,11 @@ const Layout = ({ children }) => {
             <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', padding: '20px 0' }}>No new notifications</p>
           ) : (
             notifications.map(n => (
-              <div key={n.notification_id || n.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+              <div 
+                key={n.notification_id || n.id} 
+                onClick={() => { setSelectedNotif(n); setShowNotifications(false); }}
+                style={{ padding: '12px 0', borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
+              >
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                   <span style={{ fontWeight: '700', fontSize: '13px', color: n.type === 'security' ? 'var(--danger)' : 'var(--text-main)' }}>{n.title}</span>
                   <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
@@ -189,6 +200,80 @@ const Layout = ({ children }) => {
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* Transaction Detail Detail Overlay (NayaPay Style) */}
+      {selectedNotif && selectedNotif.type === 'payment' && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div ref={detailRef} style={{ background: 'var(--bg-card)', width: '100%', maxWidth: '400px', borderRadius: '30px', overflow: 'hidden', color: 'var(--text-main)' }}>
+            <div style={{ padding: '30px', textAlign: 'center' }}>
+              <div style={{ fontSize: '14px', fontWeight: '800', opacity: 0.7, textTransform: 'uppercase', marginBottom: '10px' }}>
+                {selectedNotif.title.includes('Received') ? 'From' : 'To'}
+              </div>
+              <h2 style={{ margin: '0 0 5px 0', fontSize: '22px' }}>
+                {selectedNotif.title.includes('Received') ? selectedNotif.sender_name : selectedNotif.receiver_name || 'Merchant'}
+              </h2>
+              <p style={{ margin: 0, fontSize: '13px', opacity: 0.6 }}>SecureWallet Wallet</p>
+              
+              <h1 style={{ fontSize: '36px', margin: '30px 0 10px 0', fontWeight: '900' }}>
+                $ {parseFloat(selectedNotif.txn_amount || 0).toLocaleString()}
+              </h1>
+              <p style={{ fontSize: '13px', opacity: 0.6 }}>
+                {selectedNotif.created_at ? new Date(selectedNotif.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : selectedNotif.time}
+              </p>
+
+              <div style={{ marginTop: '40px', borderTop: '1px solid var(--border)', paddingTop: '20px', textAlign: 'left' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                  <span style={{ fontSize: '13px', opacity: 0.7 }}>Amount {selectedNotif.title.includes('Received') ? 'Received' : 'Sent'}</span>
+                  <span style={{ fontSize: '13px', fontWeight: '700' }}>$ {parseFloat(selectedNotif.txn_amount || 0).toLocaleString()}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                  <span style={{ fontSize: '13px', opacity: 0.7 }}>Service Fee (Incl. Tax)</span>
+                  <span style={{ fontSize: '13px', fontWeight: '700' }}>$ 0.00</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderTop: '1px solid var(--border)', paddingTop: '15px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '800' }}>Total Amount</span>
+                  <span style={{ fontSize: '14px', fontWeight: '800' }}>$ {parseFloat(selectedNotif.txn_amount || 0).toLocaleString()}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                  <span style={{ fontSize: '13px', opacity: 0.7 }}>Transaction ID</span>
+                  <span style={{ fontSize: '13px', fontWeight: '700' }}>{selectedNotif.reference_id || 'SW'+selectedNotif.notification_id?.toString().padStart(8, '0')}</span>
+                </div>
+
+                <div 
+                  onClick={() => setShowAdditional(!showAdditional)}
+                  style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', color: 'var(--primary)' }}
+                >
+                  <span style={{ fontSize: '12px', fontWeight: '800', textTransform: 'uppercase' }}>Additional Information</span>
+                  <span>{showAdditional ? '▲' : '▼'}</span>
+                </div>
+
+                {showAdditional && (
+                  <div style={{ marginTop: '15px', padding: '15px', background: 'var(--bg-input)', borderRadius: '15px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '11px' }}>
+                      <div style={{ opacity: 0.6 }}>Source Title</div>
+                      <div style={{ fontWeight: '700', textAlign: 'right' }}>{selectedNotif.sender_name}</div>
+                      <div style={{ opacity: 0.6 }}>Source Bank</div>
+                      <div style={{ fontWeight: '700', textAlign: 'right' }}>SecureWallet</div>
+                      <div style={{ opacity: 0.6 }}>Channel</div>
+                      <div style={{ fontWeight: '700', textAlign: 'right' }}>Internal Transfer</div>
+                      <div style={{ opacity: 0.6 }}>Destination Title</div>
+                      <div style={{ fontWeight: '700', textAlign: 'right' }}>{selectedNotif.receiver_name || storedUser.name}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button 
+                className="btn btn-primary" 
+                onClick={() => { setSelectedNotif(null); setShowAdditional(false); }}
+                style={{ width: '100%', marginTop: '30px', height: '50px', borderRadius: '15px', fontWeight: '700' }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

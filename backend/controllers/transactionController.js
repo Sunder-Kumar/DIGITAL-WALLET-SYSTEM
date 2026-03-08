@@ -105,28 +105,38 @@ exports.sendMoney = async (req, res) => {
         // Notify Receiver
         const receiverTitle = "Payment Received";
         const receiverMsg = `💰 Received $${transferAmount.toNumber()} from ${req.user.name}`;
-        await db.query("INSERT INTO Notifications (user_id, title, message, type) VALUES (?, ?, ?, 'payment')", [receiver_id, receiverTitle, receiverMsg]);
+        await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [receiver_id, receiverTitle, receiverMsg, transactionId]);
         
         if (global.io) {
             global.io.to(`user_${receiver_id}`).emit('NOTIFICATION_RECEIVED', {
                 title: receiverTitle,
                 message: receiverMsg,
                 type: 'payment',
-                time: "Just now"
+                time: "Just now",
+                transaction_id: transactionId,
+                txn_amount: transferAmount.toNumber(),
+                sender_name: req.user.name,
+                receiver_name: receiverUser[0].name,
+                reference_id: idempotencyKey
             });
         }
 
         // Notify Sender
         const senderTitle = "Payment Sent";
         const senderMsg = `💸 Sent $${transferAmount.toNumber()} to ${receiver_email}`;
-        await db.query("INSERT INTO Notifications (user_id, title, message, type) VALUES (?, ?, ?, 'payment')", [sender_id, senderTitle, senderMsg]);
+        await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [sender_id, senderTitle, senderMsg, transactionId]);
 
         if (global.io) {
             global.io.to(`user_${sender_id}`).emit('NOTIFICATION_RECEIVED', {
                 title: senderTitle,
                 message: senderMsg,
                 type: 'payment',
-                time: "Just now"
+                time: "Just now",
+                transaction_id: transactionId,
+                txn_amount: transferAmount.toNumber(),
+                sender_name: req.user.name,
+                receiver_name: receiverUser[0].name,
+                reference_id: idempotencyKey
             });
         }
 
