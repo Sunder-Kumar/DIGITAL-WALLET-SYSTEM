@@ -49,11 +49,10 @@ const Layout = ({ children }) => {
       </main>
 
       {/* Mobile Bottom Nav */}
-      <nav className="bottom-nav">
+      <nav className="bottom-nav" style={{ height: '70px' }}>
         {navLinks.map(link => (
-          <Link key={link.path} to={link.path} className={`nav-item ${isActive(link.path)}`}>
-            <span className="nav-icon" style={{ fontSize: '24px' }}>{link.icon}</span>
-            <span style={{ fontSize: '10px' }}>{link.label}</span>
+          <Link key={link.path} to={link.path} className={`nav-item ${isActive(link.path)}`} style={{ padding: '10px 0' }}>
+            <span className="nav-icon" style={{ fontSize: '28px' }}>{link.icon}</span>
           </Link>
         ))}
       </nav>
