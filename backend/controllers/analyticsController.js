@@ -68,7 +68,7 @@ exports.getSpendingInsights = async (req, res) => {
         `, [userId]);
 
         // 5. Category Breakdown (New Feature)
-        const [categoryData] = await db.query(`
+        const [categoryResult] = await db.query(`
             SELECT category as name, SUM(ABS(amount)) as value 
             FROM Ledger l
             JOIN Wallets w ON l.wallet_id = w.wallet_id
@@ -77,6 +77,11 @@ exports.getSpendingInsights = async (req, res) => {
             AND YEAR(l.created_at) = YEAR(CURRENT_DATE())
             GROUP BY category
         `, [userId]);
+
+        const categoryData = categoryResult.map(item => ({
+            name: item.name,
+            value: parseFloat(item.value)
+        }));
 
         res.json({
             chartData: dailyData,
