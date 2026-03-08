@@ -214,7 +214,7 @@ const SendMoney = () => {
                                 onChange={(e) => setSelectedBank(banks.find(b => b.bank_account_id === parseInt(e.target.value)))}
                                 style={{ width: '100%', background: 'none', border: 'none', fontSize: '16px', fontWeight: '700', outline: 'none', padding: '4px 0', color: 'var(--text-main)', cursor: 'pointer' }}
                             >
-                                {banks.length === 0 ? <option>No banks linked</option> : banks.map(b => <option key={b.bank_account_id} value={b.bank_account_id}>{b.bank_name} (•••• {b.account_number_last4})</option>)}
+                                {banks.length === 0 ? <option style={{ background: 'var(--bg-card)', color: 'var(--text-main)' }}>No banks linked</option> : banks.map(b => <option key={b.bank_account_id} value={b.bank_account_id} style={{ background: 'var(--bg-card)', color: 'var(--text-main)' }}>{b.bank_name} (•••• {b.account_number_last4})</option>)}
                             </select>
                         </div>
                     </div>
@@ -228,7 +228,7 @@ const SendMoney = () => {
                                 onChange={(e) => setSelectedCard(cards.find(c => c.card_id === parseInt(e.target.value)))}
                                 style={{ width: '100%', background: 'none', border: 'none', fontSize: '16px', fontWeight: '700', outline: 'none', padding: '4px 0', color: 'var(--text-main)', cursor: 'pointer' }}
                             >
-                                {cards.length === 0 ? <option>No cards linked</option> : cards.map(c => <option key={c.card_id} value={c.card_id}>{c.brand} (•••• {c.last4})</option>)}
+                                {cards.length === 0 ? <option style={{ background: 'var(--bg-card)', color: 'var(--text-main)' }}>No cards linked</option> : cards.map(c => <option key={c.card_id} value={c.card_id} style={{ background: 'var(--bg-card)', color: 'var(--text-main)' }}>{c.brand} (•••• {c.last4})</option>)}
                             </select>
                         </div>
                     </div>
@@ -281,7 +281,7 @@ const SendMoney = () => {
                             onChange={(e) => setCategory(e.target.value)}
                             style={{ width: '100%', background: 'none', border: 'none', fontSize: '15px', fontWeight: '600', outline: 'none', color: 'var(--text-main)' }}
                         >
-                            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                            {categories.map(cat => <option key={cat} value={cat} style={{ background: 'var(--bg-card)', color: 'var(--text-main)' }}>{cat}</option>)}
                         </select>
                     </div>
                     <div className="card" style={{ padding: '15px' }}>
