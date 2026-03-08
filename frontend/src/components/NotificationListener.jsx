@@ -14,22 +14,29 @@ const NotificationListener = () => {
             socket.emit('join_room', user.id);
         });
 
-        socket.on('PAYMENT_RECEIVED', (data) => {
-            toast.success(`💰 Received $${data.amount} from ${data.sender}!`, {
-                duration: 5000,
-                position: 'top-center',
-                style: {
-                    background: 'var(--bg-card)',
-                    color: 'var(--text-main)',
-                    borderRadius: '18px',
-                    border: '1px solid var(--primary)'
+        socket.on('NOTIFICATION_RECEIVED', (data) => {
+            toast.success(
+                <div>
+                    <b style={{ display: 'block' }}>{data.title}</b>
+                    <span style={{ fontSize: '13px' }}>{data.message}</span>
+                </div>, 
+                {
+                    duration: 5000,
+                    position: 'top-center',
+                    style: {
+                        background: 'var(--bg-card)',
+                        color: 'var(--text-main)',
+                        borderRadius: '18px',
+                        border: '1px solid var(--primary)',
+                        padding: '12px 20px'
+                    }
                 }
-            });
+            );
         });
 
         return () => {
             socket.off('connect');
-            socket.off('PAYMENT_RECEIVED');
+            socket.off('NOTIFICATION_RECEIVED');
             socket.disconnect();
         };
     }, []); // Only connect once per session or on manual trigger
