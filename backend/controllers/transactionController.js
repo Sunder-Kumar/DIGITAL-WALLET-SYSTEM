@@ -32,7 +32,8 @@ exports.sendMoney = async (req, res) => {
         const senderBalance = new Decimal(senderWallet[0].balance);
         // Overdraft allowed: Removed strict balance check
 
-        // 2. Get Receiver        const [receiverUser] = await connection.query("SELECT user_id, kyc_status FROM Users WHERE email = ?", [receiver_email]);
+        // 2. Get Receiver
+        const [receiverUser] = await connection.query("SELECT user_id, kyc_status FROM Users WHERE email = ?", [receiver_email]);
         if (receiverUser.length === 0) return res.status(404).json({ message: "Receiver not found" });
         
         const receiver_id = receiverUser[0].user_id;
@@ -117,12 +118,16 @@ exports.sendMoney = async (req, res) => {
         });
 
     } catch (error) {
-        await connection.rollback();
-        console.error(error);
+        if (connection) await connection.rollback();
+        console.error("[SEND MONEY FATAL ERROR]:", error);
         auditService.log(sender_id, 'LEDGER_TXN_FAILED', `Txn failed: ${error.message}`, req.ip);
-        res.status(500).json({ message: "Financial integrity error: Transaction rolled back." });
+        res.status(500).json({ 
+            message: "Financial integrity error: Transaction rolled back.", 
+            debug: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     } finally {
-        connection.release();
+        if (connection) connection.release();
     }
 };
 
