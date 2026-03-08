@@ -2,6 +2,7 @@ const db = require('../config/db');
 const axios = require('axios');
 const Decimal = require('decimal.js');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const limitService = require('../services/transaction-service/limit-service');
 const auditService = require('../services/audit-service/index');
 
