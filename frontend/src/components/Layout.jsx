@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -15,11 +15,29 @@ const Layout = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+
+  const notifRef = useRef(null);
+  const searchRef = useRef(null);
   
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Click Outside logic
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearching(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!token) return;
@@ -102,7 +120,7 @@ const Layout = ({ children }) => {
           {storedUser.name?.charAt(0).toUpperCase()}
         </div>
         
-        <div className="search-container" style={{ flex: 1, margin: '0 12px', position: 'relative' }}>
+        <div className="search-container" ref={searchRef} style={{ flex: 1, margin: '0 12px', position: 'relative' }}>
           <input 
             type="text" 
             placeholder="Find people and merchant" 
@@ -140,7 +158,7 @@ const Layout = ({ children }) => {
 
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <span onClick={() => navigate('/scan')} style={{ fontSize: '22px', cursor: 'pointer' }}>📷</span>
-          <span onClick={() => setShowNotifications(!showNotifications)} style={{ fontSize: '22px', cursor: 'pointer', position: 'relative' }}>
+          <span onClick={(e) => { e.stopPropagation(); setShowNotifications(!showNotifications); }} style={{ fontSize: '22px', cursor: 'pointer', position: 'relative' }}>
             🔔
             {notifications.length > 0 && (
               <span style={{ position: 'absolute', top: '-2px', right: '-2px', width: '8px', height: '8px', background: 'var(--danger)', borderRadius: '50%', border: '2px solid var(--bg-card)' }}></span>
@@ -151,7 +169,7 @@ const Layout = ({ children }) => {
 
       {/* Notification Drawer */}
       {showNotifications && (
-        <div style={{ position: 'fixed', top: '75px', right: '20px', width: '300px', maxHeight: '400px', background: 'var(--bg-card)', borderRadius: '20px', boxShadow: '0 15px 35px rgba(0,0,0,0.2)', zIndex: 1003, overflowY: 'auto', border: '1px solid var(--border)', padding: '15px' }}>
+        <div ref={notifRef} style={{ position: 'fixed', top: '75px', right: '20px', width: '300px', maxHeight: '400px', background: 'var(--bg-card)', borderRadius: '20px', boxShadow: '0 15px 35px rgba(0,0,0,0.2)', zIndex: 1003, overflowY: 'auto', border: '1px solid var(--border)', padding: '15px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
             <h4 style={{ margin: 0 }}>Notifications</h4>
             <button onClick={handleClearNotifications} style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>Clear All</button>
