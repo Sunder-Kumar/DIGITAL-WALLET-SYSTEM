@@ -44,14 +44,15 @@ const Transactions = () => {
                 ) : (
                     transactions.map(txn => {
                         const isSender = txn.sender_wallet_id === walletId;
-                        let displayLabel = txn.entity_name;
+                        const name = txn.entity_name || 'Merchant';
+                        let displayLabel = name;
                         
                         if (txn.transaction_type === 'transfer') {
-                            displayLabel = isSender ? `Sent to ${txn.entity_name}` : `Received from ${txn.entity_name}`;
+                            displayLabel = isSender ? `Sent to ${name}` : `Received from ${name}`;
                         } else if (txn.transaction_type === 'deposit') {
-                            displayLabel = `Deposit from ${txn.entity_name}`;
+                            displayLabel = `Deposit from ${name}`;
                         } else if (txn.transaction_type === 'withdrawal') {
-                            displayLabel = `Withdrawal to ${txn.entity_name}`;
+                            displayLabel = `Withdrawal to ${name}`;
                         }
 
                         return (

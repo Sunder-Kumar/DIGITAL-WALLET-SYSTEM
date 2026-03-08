@@ -204,12 +204,15 @@ exports.getTransactions = async (req, res) => {
         
         const [transactions] = await db.query(
             `SELECT t.*, u.email as other_party_email,
-             CASE 
-                WHEN t.transaction_type = 'transfer' THEN u.email
-                WHEN t.transaction_type = 'deposit' THEN REPLACE(t.note, 'Deposit from ', '')
-                WHEN t.transaction_type = 'withdrawal' THEN REPLACE(REPLACE(t.note, 'Withdrawal to ', ''), 'Transfer to ', '')
-                ELSE COALESCE(t.note, t.transaction_type)
-             END as entity_name
+             COALESCE(
+                CASE 
+                    WHEN t.transaction_type = 'transfer' THEN u.email
+                    WHEN t.transaction_type = 'deposit' THEN REPLACE(t.note, 'Deposit from ', '')
+                    WHEN t.transaction_type = 'withdrawal' THEN REPLACE(REPLACE(t.note, 'Withdrawal to ', ''), 'Transfer to ', '')
+                END,
+                t.note,
+                t.transaction_type
+             ) as entity_name
              FROM Transactions t
              LEFT JOIN Wallets w_sender ON t.sender_wallet_id = w_sender.wallet_id
              LEFT JOIN Wallets w_receiver ON t.receiver_wallet_id = w_receiver.wallet_id
