@@ -27,20 +27,31 @@ if (process.env.NODE_ENV !== 'production') {
     cert = fs.readFileSync(certPath);
     key = fs.readFileSync(keyPath);
   } else {
-    const attrs = [{ name: 'commonName', value: '192.168.0.38' }];
-    const pems = selfsigned.generate(attrs, { days: 365 });
-    cert = pems.cert;
-    key = pems.private || pems.privateKey; // Support different library versions
-    
-    if (cert && key) {
+    console.log("Generating self-signed SSL certificates for", '192.168.0.38', "...");
+    try {
+      const attrs = [{ name: 'commonName', value: '192.168.0.38' }];
+      const pems = selfsigned.generate(attrs, { days: 365 });
+      
+      // Handle both { cert, private } and { certificate, privateKey } patterns
+      cert = pems.cert || pems.certificate;
+      key = pems.private || pems.privateKey;
+      
+      if (!cert || !key) {
+        console.log("Pems object keys:", Object.keys(pems));
+        throw new Error("Generated pems object is missing cert or key properties");
+      }
+
       fs.writeFileSync(certPath, cert);
       fs.writeFileSync(keyPath, key);
-    } else {
-      console.error("SSL Generation failed: pems object structure:", Object.keys(pems));
-      throw new Error("Could not generate SSL certificates");
+      console.log("SSL certificates generated and saved.");
+    } catch (e) {
+      console.error("SSL Generation Fatal Error:", e.message);
+      // Fallback: If SSL fails, still try to start HTTP so the user isn't totally blocked
+      console.warn("CRITICAL: Falling back to HTTP due to SSL failure. Mobile camera will not work.");
+      server = http.createServer(app);
     }
   }
-  server = https.createServer({ key, cert }, app);
+  if (!server) server = https.createServer({ key, cert }, app);
 } else {
   server = http.createServer(app);
 }
