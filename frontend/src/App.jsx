@@ -11,6 +11,7 @@ import Transactions from './pages/Transactions';
 import Scan from './pages/Scan';
 import Insights from './pages/Insights';
 import Profile from './pages/Profile';
+import Contacts from './pages/Contacts';
 import SendMoney from './pages/SendMoney';
 import AddMoney from './pages/AddMoney';
 import RequestMoney from './pages/RequestMoney';
@@ -56,6 +57,7 @@ function App() {
           <Route path="/scan" element={isAuthenticated ? <Scan /> : <Navigate to="/login" />} />
           <Route path="/insights" element={isAuthenticated ? <Insights /> : <Navigate to="/login" />} />
           <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
+          <Route path="/contacts" element={isAuthenticated ? <Contacts /> : <Navigate to="/login" />} />
           <Route path="/send" element={isAuthenticated ? <SendMoney /> : <Navigate to="/login" />} />
           <Route path="/add-money" element={isAuthenticated ? <AddMoney /> : <Navigate to="/login" />} />
           <Route path="/request" element={isAuthenticated ? <RequestMoney /> : <Navigate to="/login" />} />
