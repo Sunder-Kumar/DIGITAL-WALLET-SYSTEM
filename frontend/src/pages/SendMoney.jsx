@@ -43,7 +43,8 @@ const SendMoney = () => {
         } catch (err) { console.error(err); }
     };
 
-    const handleSend = async () => {
+    const handleSend = async (e) => {
+        if (e) e.preventDefault();
         if (pin.length !== 4) return alert("Please enter your 4-digit PIN");
         setLoading(true);
         try {
@@ -76,7 +77,7 @@ const SendMoney = () => {
     if (step === 'pin') {
         return (
             <div style={{ padding: '24px', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="card" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', padding: '40px 20px' }}>
+                <form onSubmit={handleSend} className="card" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', padding: '40px 20px' }}>
                     <h2 style={{ marginBottom: '10px' }}>Enter PIN</h2>
                     <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '30px' }}>Confirm your transfer of <strong>${parseFloat(amount).toLocaleString()}</strong> to <strong>{receiverEmail}</strong></p>
                     
@@ -91,21 +92,22 @@ const SendMoney = () => {
                     />
 
                     <button 
+                        type="submit"
                         className="btn btn-primary" 
                         style={{ width: '100%', marginTop: '30px', height: '55px', borderRadius: '15px', fontWeight: '700' }}
-                        onClick={handleSend}
                         disabled={loading || pin.length !== 4}
                     >
                         {loading ? 'Verifying...' : 'Confirm & Pay'}
                     </button>
                     
                     <button 
+                        type="button"
                         onClick={() => setStep('input')}
                         style={{ background: 'none', border: 'none', color: 'var(--text-muted)', marginTop: '20px', cursor: 'pointer' }}
                     >
                         Cancel
                     </button>
-                </div>
+                </form>
             </div>
         );
     }
