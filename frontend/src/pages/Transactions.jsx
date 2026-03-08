@@ -44,6 +44,16 @@ const Transactions = () => {
                 ) : (
                     transactions.map(txn => {
                         const isSender = txn.sender_wallet_id === walletId;
+                        let displayLabel = txn.entity_name;
+                        
+                        if (txn.transaction_type === 'transfer') {
+                            displayLabel = isSender ? `Sent to ${txn.entity_name}` : `Received from ${txn.entity_name}`;
+                        } else if (txn.transaction_type === 'deposit') {
+                            displayLabel = `Deposit from ${txn.entity_name}`;
+                        } else if (txn.transaction_type === 'withdrawal') {
+                            displayLabel = `Withdrawal to ${txn.entity_name}`;
+                        }
+
                         return (
                             <div key={txn.transaction_id} className="txn-item">
                                 <div className="txn-icon" style={{ 
@@ -53,7 +63,7 @@ const Transactions = () => {
                                     {isSender ? '📤' : '📥'}
                                 </div>
                                 <div className="txn-info">
-                                    <div style={{ fontWeight: '700', fontSize: '15px' }}>{isSender ? 'To ' : 'From '}{txn.display_name}</div>
+                                    <div style={{ fontWeight: '700', fontSize: '15px' }}>{displayLabel}</div>
                                     <small style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{new Date(txn.timestamp).toLocaleString()}</small>
                                     {txn.status === 'flagged' && <span style={{ color: 'orange', fontSize: '10px', display: 'block' }}>⚠️ FLAGGED</span>}
                                 </div>

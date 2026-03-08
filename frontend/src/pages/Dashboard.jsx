@@ -172,6 +172,16 @@ const Dashboard = () => {
                     ) : (
                         transactions.map(txn => {
                             const isSender = txn.sender_wallet_id === walletId;
+                            let displayLabel = txn.entity_name;
+                            
+                            if (txn.transaction_type === 'transfer') {
+                                displayLabel = isSender ? `Sent to ${txn.entity_name}` : `Received from ${txn.entity_name}`;
+                            } else if (txn.transaction_type === 'deposit') {
+                                displayLabel = `Deposit from ${txn.entity_name}`;
+                            } else if (txn.transaction_type === 'withdrawal') {
+                                displayLabel = `Withdrawal to ${txn.entity_name}`;
+                            }
+
                             return (
                                 <div key={txn.transaction_id} className="txn-item" style={{ borderBottom: '1px solid var(--border)' }}>
                                     <div className="txn-icon" style={{ 
@@ -181,7 +191,7 @@ const Dashboard = () => {
                                         {isSender ? '↗️' : '↙️'}
                                     </div>
                                     <div className="txn-info">
-                                        <div style={{ fontWeight: '700' }}>{isSender ? 'To' : 'From'} {txn.display_name}</div>
+                                        <div style={{ fontWeight: '700' }}>{displayLabel}</div>
                                         <small style={{ color: 'var(--text-muted)' }}>{new Date(txn.timestamp).toLocaleDateString()}</small>
                                     </div>
                                     <div className="txn-amount" style={{ color: isSender ? 'var(--text-main)' : 'var(--secondary)' }}>
