@@ -27,11 +27,17 @@ const Dashboard = () => {
 
         const socket = io('https://192.168.0.38:5000');
         socket.on('connect', () => socket.emit('join_room', storedUser.id));
-        socket.on('PAYMENT_RECEIVED', () => fetchData()); 
+        
+        socket.on('NOTIFICATION_RECEIVED', () => {
+            // Add a small delay to ensure DB write is complete before refetch
+            setTimeout(() => {
+                fetchData();
+            }, 500);
+        }); 
 
         return () => {
             socket.off('connect');
-            socket.off('PAYMENT_RECEIVED');
+            socket.off('NOTIFICATION_RECEIVED');
             socket.disconnect();
         };
     }, []);

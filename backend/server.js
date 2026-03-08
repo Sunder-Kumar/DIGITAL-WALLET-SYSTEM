@@ -63,7 +63,7 @@ const io = new Server(server, {
 global.io = io;
 
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+  console.log('Client connected:', socket.id);
 
   // Authenticated users join a room named after their ID
   socket.on('join_room', (userId) => {
@@ -78,7 +78,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected');
+    console.log('Client disconnected:', socket.id);
   });
 });
 
@@ -100,20 +100,6 @@ app.use('/api', limiter);
 
 // Routes
 app.use('/api', apiRoutes);
-
-// Socket.io Configuration
-io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
-
-  socket.on('join_room', (userId) => {
-    socket.join(`user_${userId}`);
-    console.log(`User ${userId} joined room`);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
-});
 
 const PORT = process.env.PORT || 5000;
 
