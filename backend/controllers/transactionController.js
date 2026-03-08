@@ -33,10 +33,11 @@ exports.sendMoney = async (req, res) => {
         // Overdraft allowed: Removed strict balance check
 
         // 2. Get Receiver
-        const [receiverUser] = await connection.query("SELECT user_id, kyc_status FROM Users WHERE email = ?", [receiver_email]);
+        const [receiverUser] = await connection.query("SELECT user_id, name, kyc_status FROM Users WHERE email = ?", [receiver_email]);
         if (receiverUser.length === 0) return res.status(404).json({ message: "Receiver not found" });
         
         const receiver_id = receiverUser[0].user_id;
+        const receiver_name = receiverUser[0].name;
         if (sender_id === receiver_id) return res.status(400).json({ message: "Cannot send money to yourself" });
 
         const [receiverWallet] = await connection.query("SELECT wallet_id, balance FROM Wallets WHERE user_id = ? FOR UPDATE", [receiver_id]);
@@ -105,10 +106,11 @@ exports.sendMoney = async (req, res) => {
         // Notify Receiver
         const receiverTitle = "Payment Received";
         const receiverMsg = `💰 Received $${transferAmount.toNumber()} from ${req.user.name}`;
-        await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [receiver_id, receiverTitle, receiverMsg, transactionId]);
+        const [rNotif] = await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [receiver_id, receiverTitle, receiverMsg, transactionId]);
         
         if (global.io) {
             global.io.to(`user_${receiver_id}`).emit('NOTIFICATION_RECEIVED', {
+                notification_id: rNotif.insertId,
                 title: receiverTitle,
                 message: receiverMsg,
                 type: 'payment',
@@ -116,7 +118,7 @@ exports.sendMoney = async (req, res) => {
                 transaction_id: transactionId,
                 txn_amount: transferAmount.toNumber(),
                 sender_name: req.user.name,
-                receiver_name: receiverUser[0].name,
+                receiver_name: receiver_name,
                 reference_id: idempotencyKey
             });
         }
@@ -124,10 +126,11 @@ exports.sendMoney = async (req, res) => {
         // Notify Sender
         const senderTitle = "Payment Sent";
         const senderMsg = `💸 Sent $${transferAmount.toNumber()} to ${receiver_email}`;
-        await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [sender_id, senderTitle, senderMsg, transactionId]);
+        const [sNotif] = await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [sender_id, senderTitle, senderMsg, transactionId]);
 
         if (global.io) {
             global.io.to(`user_${sender_id}`).emit('NOTIFICATION_RECEIVED', {
+                notification_id: sNotif.insertId,
                 title: senderTitle,
                 message: senderMsg,
                 type: 'payment',
@@ -135,7 +138,7 @@ exports.sendMoney = async (req, res) => {
                 transaction_id: transactionId,
                 txn_amount: transferAmount.toNumber(),
                 sender_name: req.user.name,
-                receiver_name: receiverUser[0].name,
+                receiver_name: receiver_name,
                 reference_id: idempotencyKey
             });
         }
