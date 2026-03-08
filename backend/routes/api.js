@@ -4,6 +4,7 @@ const authController = require('../controllers/authController');
 const walletController = require('../controllers/walletController');
 const transactionController = require('../controllers/transactionController');
 const analyticsController = require('../controllers/analyticsController');
+const notificationController = require('../controllers/notificationController');
 const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
 
 // Auth Routes
@@ -11,6 +12,11 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.get('/profile', verifyToken, authController.getUserProfile);
 router.get('/users/search', verifyToken, authController.searchUsers);
+
+// Notification Routes
+router.get('/notifications', verifyToken, notificationController.getNotifications);
+router.patch('/notifications/:notificationId/read', verifyToken, notificationController.markAsRead);
+router.delete('/notifications', verifyToken, notificationController.clearAll);
 
 // Pillar 4: MFA Routes
 router.post('/mfa/setup', verifyToken, authController.setup2FA);

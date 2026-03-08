@@ -23,23 +23,35 @@ const Layout = ({ children }) => {
 
   useEffect(() => {
     if (!token) return;
+    fetchNotifications();
 
     const socket = io('http://localhost:5000');
     socket.emit('join_room', storedUser.id);
 
-    socket.on('PAYMENT_RECEIVED', (data) => {
-      const newNotif = {
-        id: Date.now(),
-        title: 'Payment Received',
-        message: `💰 Received $${data.amount} from ${data.sender}`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        type: 'payment'
-      };
-      setNotifications(prev => [newNotif, ...prev]);
+    socket.on('NOTIFICATION_RECEIVED', (data) => {
+      setNotifications(prev => [data, ...prev]);
     });
 
     return () => socket.disconnect();
   }, [token]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/notifications', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(res.data);
+    } catch (err) { console.error("Failed to fetch notifications"); }
+  };
+
+  const handleClearNotifications = async () => {
+    try {
+      await axios.delete('http://localhost:5000/api/notifications', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications([]);
+    } catch (err) { alert("Failed to clear notifications"); }
+  };
 
   const handleSearch = async (e) => {
     const query = e.target.value;
@@ -142,18 +154,20 @@ const Layout = ({ children }) => {
         <div style={{ position: 'fixed', top: '75px', right: '20px', width: '300px', maxHeight: '400px', background: 'var(--bg-card)', borderRadius: '20px', boxShadow: '0 15px 35px rgba(0,0,0,0.2)', zIndex: 1003, overflowY: 'auto', border: '1px solid var(--border)', padding: '15px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
             <h4 style={{ margin: 0 }}>Notifications</h4>
-            <button onClick={() => setNotifications([])} style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>Clear All</button>
+            <button onClick={handleClearNotifications} style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>Clear All</button>
           </div>
           {notifications.length === 0 ? (
             <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', padding: '20px 0' }}>No new notifications</p>
           ) : (
             notifications.map(n => (
-              <div key={n.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+              <div key={n.notification_id || n.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontWeight: '700', fontSize: '13px' }}>{n.title}</span>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{n.time}</span>
+                  <span style={{ fontWeight: '700', fontSize: '13px', color: n.type === 'security' ? 'var(--danger)' : 'var(--text-main)' }}>{n.title}</span>
+                  <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                    {n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : n.time}
+                  </span>
                 </div>
-                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>{n.message}</p>
+                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.4' }}>{n.message}</p>
               </div>
             ))
           )}

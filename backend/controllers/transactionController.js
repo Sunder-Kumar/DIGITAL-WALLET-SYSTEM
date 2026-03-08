@@ -100,13 +100,49 @@ exports.sendMoney = async (req, res) => {
 
         await connection.commit();
 
-        // 7. Pillar 3: WebSockets (Trigger global event - handled in server.js)
+        // 7. Persistent Notifications & Real-time WebSockets
+        
+        // Notify Receiver
+        const receiverTitle = "Payment Received";
+        const receiverMsg = `💰 Received $${transferAmount.toNumber()} from ${req.user.name}`;
+        await db.query("INSERT INTO Notifications (user_id, title, message, type) VALUES (?, ?, ?, 'payment')", [receiver_id, receiverTitle, receiverMsg]);
+        
         if (global.io) {
-            global.io.to(`user_${receiver_id}`).emit('PAYMENT_RECEIVED', {
-                amount: transferAmount.toNumber(),
-                sender: req.user.name,
-                txn_id: transactionId
+            global.io.to(`user_${receiver_id}`).emit('NOTIFICATION_RECEIVED', {
+                title: receiverTitle,
+                message: receiverMsg,
+                type: 'payment',
+                time: "Just now"
             });
+        }
+
+        // Notify Sender
+        const senderTitle = "Payment Sent";
+        const senderMsg = `💸 Sent $${transferAmount.toNumber()} to ${receiver_email}`;
+        await db.query("INSERT INTO Notifications (user_id, title, message, type) VALUES (?, ?, ?, 'payment')", [sender_id, senderTitle, senderMsg]);
+
+        if (global.io) {
+            global.io.to(`user_${sender_id}`).emit('NOTIFICATION_RECEIVED', {
+                title: senderTitle,
+                message: senderMsg,
+                type: 'payment',
+                time: "Just now"
+            });
+        }
+
+        // Security Alert if flagged
+        if (status === 'flagged' || riskLevel !== 'low') {
+            const securityMsg = `⚠️ Unusual activity detected. Your transaction of $${amount} was flagged for review.`;
+            await db.query("INSERT INTO Notifications (user_id, title, message, type) VALUES (?, ?, ?, 'security')", [sender_id, "Security Alert", securityMsg]);
+            
+            if (global.io) {
+                global.io.to(`user_${sender_id}`).emit('NOTIFICATION_RECEIVED', {
+                    title: "Security Alert",
+                    message: securityMsg,
+                    type: 'security',
+                    time: "Just now"
+                });
+            }
         }
 
         auditService.log(sender_id, 'LEDGER_TXN_SUCCESS', `Txn ${transactionId}: $${amount} moved using Double-Entry. Key: ${idempotencyKey}`, req.ip);
