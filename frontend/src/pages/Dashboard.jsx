@@ -12,7 +12,7 @@ const Dashboard = () => {
     const [cards, setCards] = useState([]);
     const [user, setUser] = useState({});
     const [showQR, setShowQR] = useState(false);
-    const [showBalance, setShowBalance] = useState(true);
+    const [showBalance, setShowBalance] = useState(localStorage.getItem('showBalance') !== 'false');
     
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
@@ -84,7 +84,11 @@ const Dashboard = () => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <p style={{ fontSize: '13px', opacity: 0.9, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Unified Wallet Balance</p>
                             <button 
-                                onClick={() => setShowBalance(!showBalance)} 
+                                onClick={() => {
+                                    const nextValue = !showBalance;
+                                    setShowBalance(nextValue);
+                                    localStorage.setItem('showBalance', nextValue);
+                                }} 
                                 style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', cursor: 'pointer', fontSize: '16px', padding: '5px', borderRadius: '50%', width: '32px', height: '32px' }}
                                 title={showBalance ? "Hide Balance" : "Show Balance"}
                             >
