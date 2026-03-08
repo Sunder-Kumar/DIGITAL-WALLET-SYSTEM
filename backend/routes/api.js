@@ -9,7 +9,8 @@ const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
 // Auth Routes
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-router.get('/profile', verifyToken, authController.getProfile);
+router.get('/profile', verifyToken, authController.getUserProfile);
+router.get('/users/search', verifyToken, authController.searchUsers);
 
 // Pillar 4: MFA Routes
 router.post('/mfa/setup', verifyToken, authController.setup2FA);

@@ -135,11 +135,27 @@ exports.updateKYCStatus = async (req, res) => {
     }
 };
 
-exports.getProfile = async (req, res) => {
+exports.getUserProfile = async (req, res) => {
     try {
         const [users] = await db.query("SELECT user_id, name, email, role, kyc_status, mfa_enabled, created_at FROM Users WHERE user_id = ?", [req.user.id]);
         res.json(users[0]);
     } catch (error) {
         res.status(500).json({ message: "Server error" });
+    }
+};
+
+exports.searchUsers = async (req, res) => {
+    const { query } = req.query;
+    const currentUserId = req.user.id;
+
+    try {
+        const [users] = await db.query(
+            "SELECT user_id, name, email FROM Users WHERE (name LIKE ? OR email LIKE ?) AND user_id != ? LIMIT 10",
+            [`%${query}%`, `%${query}%`, currentUserId]
+        );
+        res.json(users);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to search users" });
     }
 };
