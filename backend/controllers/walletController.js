@@ -1,6 +1,8 @@
 const db = require('../config/db');
 const { encrypt } = require('../utils/encryption');
 
+const bcrypt = require('bcryptjs');
+
 exports.getBalance = async (req, res) => {
     try {
         const [wallet] = await db.query("SELECT * FROM Wallets WHERE user_id = ?", [req.user.id]);
@@ -8,6 +10,85 @@ exports.getBalance = async (req, res) => {
         res.json(wallet[0]);
     } catch (error) {
         res.status(500).json({ message: "Server error" });
+    }
+};
+
+exports.withdrawMoney = async (req, res) => {
+    const { amount, bank_id, pin } = req.body;
+    const userId = req.user.id;
+
+    if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
+    if (!pin) return res.status(400).json({ message: "PIN is required" });
+
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Verify PIN
+        const [user] = await connection.query("SELECT transaction_pin FROM Users WHERE user_id = ?", [userId]);
+        if (!user[0].transaction_pin) {
+            await connection.rollback();
+            return res.status(400).json({ message: "Transaction PIN not set" });
+        }
+
+        const validPin = await bcrypt.compare(pin, user[0].transaction_pin);
+        if (!validPin) {
+            await connection.rollback();
+            return res.status(400).json({ message: "Incorrect PIN" });
+        }
+
+        // 2. Check Wallet
+        const [wallet] = await connection.query("SELECT wallet_id, balance FROM Wallets WHERE user_id = ? FOR UPDATE", [userId]);
+        const walletId = wallet[0].wallet_id;
+
+        // 3. Get Bank Details
+        const [bank] = await connection.query("SELECT bank_name, account_number_last4 FROM Bank_Accounts WHERE bank_account_id = ? AND user_id = ?", [bank_id, userId]);
+        if (bank.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: "Bank account not found" });
+        }
+
+        // 4. Update Balance (Overdraft allowed as per previous request)
+        await connection.query("UPDATE Wallets SET balance = balance - ? WHERE wallet_id = ?", [amount, walletId]);
+
+        // 5. Create Transaction
+        const [txn] = await connection.query(
+            "INSERT INTO Transactions (sender_wallet_id, amount, transaction_type, status, category, note) VALUES (?, ?, 'withdrawal', 'completed', 'Other', ?)",
+            [walletId, amount, `Withdrawal to ${bank[0].bank_name}`]
+        );
+
+        // 6. Ledger Entry (Debit)
+        await connection.query(
+            "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description, category) VALUES (?, ?, ?, 'debit', ?, 'Other')",
+            [walletId, txn.insertId, -amount, `Transfer to Bank: ${bank[0].bank_name} (•••• ${bank[0].account_number_last4})`]
+        );
+
+        await connection.commit();
+
+        // 7. Notification
+        const notifTitle = "Withdrawal Successful";
+        const notifMsg = `🏦 $${amount} transferred to your ${bank[0].bank_name} account.`;
+        await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [userId, notifTitle, notifMsg, txn.insertId]);
+
+        if (global.io) {
+            global.io.to(`user_${userId}`).emit('NOTIFICATION_RECEIVED', {
+                title: notifTitle,
+                message: notifMsg,
+                type: 'payment',
+                time: "Just now",
+                txn_amount: amount,
+                sender_name: "Wallet",
+                receiver_name: bank[0].bank_name
+            });
+        }
+
+        res.json({ message: "Withdrawal successful", new_balance: amount });
+    } catch (error) {
+        if (connection) await connection.rollback();
+        console.error(error);
+        res.status(500).json({ message: "Withdrawal failed" });
+    } finally {
+        if (connection) connection.release();
     }
 };
 
