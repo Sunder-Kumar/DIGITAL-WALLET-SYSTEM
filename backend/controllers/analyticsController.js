@@ -67,8 +67,20 @@ exports.getSpendingInsights = async (req, res) => {
             ORDER BY l.created_at DESC LIMIT 1
         `, [userId]);
 
+        // 5. Category Breakdown (New Feature)
+        const [categoryData] = await db.query(`
+            SELECT category as name, SUM(ABS(amount)) as value 
+            FROM Ledger l
+            JOIN Wallets w ON l.wallet_id = w.wallet_id
+            WHERE w.user_id = ? AND l.entry_type = 'debit'
+            AND MONTH(l.created_at) = MONTH(CURRENT_DATE())
+            AND YEAR(l.created_at) = YEAR(CURRENT_DATE())
+            GROUP BY category
+        `, [userId]);
+
         res.json({
             chartData: dailyData,
+            categoryData: categoryData,
             projection: {
                 current: currentSpend.toNumber(),
                 projected: projectedSpend.toFixed(2),

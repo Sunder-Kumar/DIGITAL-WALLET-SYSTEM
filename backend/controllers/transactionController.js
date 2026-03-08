@@ -6,7 +6,7 @@ const limitService = require('../services/transaction-service/limit-service');
 const auditService = require('../services/audit-service/index');
 
 exports.sendMoney = async (req, res) => {
-    const { receiver_email, amount } = req.body;
+    const { receiver_email, amount, category, note } = req.body;
     const sender_id = req.user.id;
     const idempotencyKey = crypto.randomUUID(); // Built-in Node.js UUID
 
@@ -65,22 +65,22 @@ exports.sendMoney = async (req, res) => {
 
         // 5. Create Transaction Record
         const [txnResult] = await connection.query(
-            "INSERT INTO Transactions (sender_wallet_id, receiver_wallet_id, amount, transaction_type, status, fraud_score, risk_level, reference_id) VALUES (?, ?, ?, 'transfer', ?, ?, ?, ?)",
-            [senderWallet[0].wallet_id, receiverWallet[0].wallet_id, transferAmount.toNumber(), status, fraudScore, riskLevel, idempotencyKey]
+            "INSERT INTO Transactions (sender_wallet_id, receiver_wallet_id, amount, transaction_type, status, fraud_score, risk_level, reference_id, category, note) VALUES (?, ?, ?, 'transfer', ?, ?, ?, ?, ?, ?)",
+            [senderWallet[0].wallet_id, receiverWallet[0].wallet_id, transferAmount.toNumber(), status, fraudScore, riskLevel, idempotencyKey, category || 'Other', note || null]
         );
         const transactionId = txnResult.insertId;
 
         // 6. Double-Entry Ledger (Pillar 1) - Source of Truth
         // Entry A: Debit Sender
         await connection.query(
-            "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description) VALUES (?, ?, ?, 'debit', ?)",
-            [senderWallet[0].wallet_id, transactionId, transferAmount.negated().toNumber(), 'debit', `Transfer to ${receiver_email}`]
+            "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description, category, note) VALUES (?, ?, ?, 'debit', ?, ?, ?)",
+            [senderWallet[0].wallet_id, transactionId, transferAmount.negated().toNumber(), 'debit', `Transfer to ${receiver_email}`, category || 'Other', note || null]
         );
 
         // Entry B: Credit Receiver
         await connection.query(
-            "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description) VALUES (?, ?, ?, 'credit', ?)",
-            [receiverWallet[0].wallet_id, transactionId, transferAmount.toNumber(), 'credit', `Received from ${req.user.email}`]
+            "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description, category, note) VALUES (?, ?, ?, 'credit', ?, ?, ?)",
+            [receiverWallet[0].wallet_id, transactionId, transferAmount.toNumber(), 'credit', `Received from ${req.user.email}`, category || 'Other', note || null]
         );
 
         if (riskLevel !== 'low') {

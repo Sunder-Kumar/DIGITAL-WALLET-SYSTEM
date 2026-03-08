@@ -4,16 +4,17 @@ import axios from 'axios';
 
 const Bills = () => {
     const [step, setStep] = useState('categories'); // 'categories' | 'details' | 'confirm'
+    const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedBiller, setSelectedBiller] = useState(null);
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const categories = [
-        { name: 'Utilities', icon: '⚡', billers: ['General Electric', 'City Water', 'Waste Mgmt'] },
-        { name: 'Internet', icon: '🌐', billers: ['Xfinity', 'AT&T Fiber', 'Starlink'] },
-        { name: 'Mobile', icon: '📱', billers: ['Verizon', 'T-Mobile', 'Mint Mobile'] },
-        { name: 'Rent', icon: '🏠', billers: ['Property Group', 'Apartments.com'] }
+        { name: 'Utilities', icon: '⚡', billers: ['General Electric', 'City Water', 'Waste Mgmt'], standardCategory: 'Electricity Bill' },
+        { name: 'Internet', icon: '🌐', billers: ['Xfinity', 'AT&T Fiber', 'Starlink'], standardCategory: 'Internet / Mobile Recharge' },
+        { name: 'Mobile', icon: '📱', billers: ['Verizon', 'T-Mobile', 'Mint Mobile'], standardCategory: 'Internet / Mobile Recharge' },
+        { name: 'Rent', icon: '🏠', billers: ['Property Group', 'Apartments.com'], standardCategory: 'Rent' }
     ];
 
     const handlePay = async () => {
@@ -23,7 +24,7 @@ const Bills = () => {
             await axios.post('http://localhost:5000/api/transaction/pay-bill', {
                 biller_name: selectedBiller,
                 amount: parseFloat(amount),
-                category: 'Utility'
+                category: selectedCategory || 'Other'
             }, { headers: { Authorization: `Bearer ${token}` } });
             alert("Bill paid successfully!");
             navigate('/dashboard');
@@ -41,7 +42,7 @@ const Bills = () => {
                 </div>
                 <div className="adaptive-grid">
                     {categories.map(cat => (
-                        <div key={cat.name} className="card" style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => { setSelectedBiller(cat.billers[0]); setStep('details'); }}>
+                        <div key={cat.name} className="card" style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => { setSelectedBiller(cat.billers[0]); setSelectedCategory(cat.standardCategory); setStep('details'); }}>
                             <span style={{ fontSize: '32px' }}>{cat.icon}</span>
                             <h4 style={{ marginTop: '10px' }}>{cat.name}</h4>
                         </div>

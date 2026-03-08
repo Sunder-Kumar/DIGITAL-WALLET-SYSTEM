@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell, PieChart, Pie, Legend } from 'recharts';
 
 const Insights = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const COLORS = ['#5d3fd3', '#00c853', '#ff3d00', '#ffa000', '#00bcd4', '#e91e63', '#9c27b0', '#3f51b5', '#ffeb3b', '#795548'];
     
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -70,8 +72,40 @@ const Insights = () => {
                 </div>
             </div>
 
+            {/* Category Breakdown (New Section) */}
+            <div style={{ marginTop: '40px' }}>
+                <h4>Spending by Category</h4>
+                <div className="card" style={{ height: '350px', padding: '20px', marginTop: '15px' }}>
+                    {data.categoryData?.length === 0 ? (
+                        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                            No category data for this month.
+                        </div>
+                    ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={data.categoryData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {data.categoryData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', background: 'var(--bg-card)', color: 'var(--text-main)' }} />
+                                <Legend verticalAlign="bottom" height={36} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    )}
+                </div>
+            </div>
+
             {data.aiCoach?.anomaly && (
-                <div className="card" style={{ marginTop: '20px', border: '1px solid var(--danger)', background: 'rgba(255, 61, 0, 0.05)' }}>
+                <div className="card" style={{ marginTop: '30px', border: '1px solid var(--danger)', background: 'rgba(255, 61, 0, 0.05)' }}>
                     <div style={{ display: 'flex', gap: '15px' }}>
                         <span style={{ fontSize: '24px' }}>🚨</span>
                         <div>

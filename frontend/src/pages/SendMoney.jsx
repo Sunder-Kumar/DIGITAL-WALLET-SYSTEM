@@ -7,10 +7,19 @@ const SendMoney = () => {
     const location = useLocation();
     const [receiverEmail, setReceiverEmail] = useState('');
     const [amount, setAmount] = useState('');
+    const [category, setCategory] = useState('Other');
     const [note, setNote] = useState('');
     const [balance, setBalance] = useState(0);
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState('input'); 
+
+    const categories = [
+        "Grocery", "Food & Dining", "Shopping", "Fuel / Petrol", 
+        "Public Transport", "Car Maintenance", "Rent", "Electricity Bill", 
+        "Water Bill", "Internet / Mobile Recharge", "Health / Medicine", 
+        "Education", "Entertainment", "Travel", "Gifts", 
+        "Family Support", "Savings / Investment", "Other"
+    ];
     
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -37,7 +46,7 @@ const SendMoney = () => {
         setLoading(true);
         try {
             const res = await axios.post('http://localhost:5000/api/transaction/send', 
-                { receiver_email: receiverEmail, amount: parseFloat(amount), note }, 
+                { receiver_email: receiverEmail, amount: parseFloat(amount), category, note }, 
                 config
             );
             setStep('success');
@@ -134,6 +143,17 @@ const SendMoney = () => {
 
             {/* Footer Actions */}
             <div style={{ paddingBottom: '20px' }}>
+                <div className="card" style={{ marginBottom: '15px', padding: '15px' }}>
+                    <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Select Category</label>
+                    <select 
+                        value={category} 
+                        onChange={(e) => setCategory(e.target.value)}
+                        style={{ width: '100%', background: 'none', border: 'none', fontSize: '15px', fontWeight: '600', outline: 'none', color: 'var(--text-main)', cursor: 'pointer' }}
+                    >
+                        {categories.map(cat => <option key={cat} value={cat} style={{ background: 'var(--bg-card)' }}>{cat}</option>)}
+                    </select>
+                </div>
+
                 <div className="card" style={{ marginBottom: '20px', padding: '15px' }}>
                     <input 
                         placeholder="Add a note (optional)"
