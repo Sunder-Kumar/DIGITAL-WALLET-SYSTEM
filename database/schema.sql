@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS Transactions (
     fraud_score FLOAT DEFAULT 0.0,
     risk_level ENUM('low', 'medium', 'high', 'critical') DEFAULT 'low',
     reference_id VARCHAR(100) UNIQUE,
+    category VARCHAR(50) DEFAULT 'Other',
+    note TEXT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (sender_wallet_id) REFERENCES Wallets(wallet_id),
     FOREIGN KEY (receiver_wallet_id) REFERENCES Wallets(wallet_id)
@@ -50,6 +52,8 @@ CREATE TABLE IF NOT EXISTS Ledger (
     amount DECIMAL(19, 4) NOT NULL, -- Debit is negative, Credit is positive
     entry_type ENUM('debit', 'credit') NOT NULL,
     description VARCHAR(255),
+    category VARCHAR(50) DEFAULT 'Other',
+    note TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX (wallet_id),
     INDEX (transaction_id),
