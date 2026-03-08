@@ -33,6 +33,7 @@ router.post('/kyc/submit', verifyToken, authController.submitKYC);
 router.get('/wallet', verifyToken, walletController.getBalance);
 router.post('/wallet/add-money', verifyToken, walletController.addMoney);
 router.post('/wallet/withdraw', verifyToken, walletController.withdrawMoney);
+router.post('/wallet/transfer-to-card', verifyToken, walletController.transferToCard);
 router.get('/wallet/cards', verifyToken, walletController.getCards);
 router.post('/wallet/cards', verifyToken, walletController.addCard);
 router.patch('/wallet/cards/:cardId/primary', verifyToken, walletController.setPrimaryCard);

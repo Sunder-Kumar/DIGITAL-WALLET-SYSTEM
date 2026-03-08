@@ -17,6 +17,7 @@ import AddMoney from './pages/AddMoney';
 import RequestMoney from './pages/RequestMoney';
 import Withdraw from './pages/Withdraw';
 import Bills from './pages/Bills';
+import TransferToCard from './pages/TransferToCard';
 import KYC from './pages/KYC';
 import Security from './pages/Security';
 import ConnectedCards from './pages/ConnectedCards';
@@ -63,6 +64,7 @@ function App() {
           <Route path="/add-money" element={isAuthenticated ? <AddMoney /> : <Navigate to="/login" />} />
           <Route path="/request" element={isAuthenticated ? <RequestMoney /> : <Navigate to="/login" />} />
           <Route path="/withdraw" element={isAuthenticated ? <Withdraw /> : <Navigate to="/login" />} />
+          <Route path="/transfer-to-card" element={isAuthenticated ? <TransferToCard /> : <Navigate to="/login" />} />
           <Route path="/bills" element={isAuthenticated ? <Bills /> : <Navigate to="/login" />} />
           <Route path="/kyc" element={isAuthenticated ? <KYC /> : <Navigate to="/login" />} />
           <Route path="/security" element={isAuthenticated ? <Security /> : <Navigate to="/login" />} />

@@ -48,7 +48,7 @@ exports.withdrawMoney = async (req, res) => {
             return res.status(404).json({ message: "Bank account not found" });
         }
 
-        // 4. Update Balance (Overdraft allowed as per previous request)
+        // 4. Update Balance
         await connection.query("UPDATE Wallets SET balance = balance - ? WHERE wallet_id = ?", [amount, walletId]);
 
         // 5. Create Transaction
@@ -87,6 +87,80 @@ exports.withdrawMoney = async (req, res) => {
         if (connection) await connection.rollback();
         console.error(error);
         res.status(500).json({ message: "Withdrawal failed" });
+    } finally {
+        if (connection) connection.release();
+    }
+};
+
+exports.transferToCard = async (req, res) => {
+    const { amount, card_id, pin } = req.body;
+    const userId = req.user.id;
+
+    if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
+    if (!pin) return res.status(400).json({ message: "PIN is required" });
+
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Verify PIN
+        const [user] = await connection.query("SELECT transaction_pin FROM Users WHERE user_id = ?", [userId]);
+        const validPin = await bcrypt.compare(pin, user[0].transaction_pin);
+        if (!validPin) {
+            await connection.rollback();
+            return res.status(400).json({ message: "Incorrect PIN" });
+        }
+
+        // 2. Get Card Details
+        const [card] = await connection.query("SELECT brand, last4 FROM Cards WHERE card_id = ? AND user_id = ?", [card_id, userId]);
+        if (card.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: "Card not found" });
+        }
+
+        // 3. Check Wallet
+        const [wallet] = await connection.query("SELECT wallet_id, balance FROM Wallets WHERE user_id = ? FOR UPDATE", [userId]);
+        const walletId = wallet[0].wallet_id;
+
+        // 4. Update Balance
+        await connection.query("UPDATE Wallets SET balance = balance - ? WHERE wallet_id = ?", [amount, walletId]);
+
+        // 5. Create Transaction
+        const [txn] = await connection.query(
+            "INSERT INTO Transactions (sender_wallet_id, amount, transaction_type, status, category, note) VALUES (?, ?, 'withdrawal', 'completed', 'Other', ?)",
+            [walletId, amount, `Transfer to ${card[0].brand} Card`]
+        );
+
+        // 6. Ledger Entry (Debit)
+        await connection.query(
+            "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description, category) VALUES (?, ?, ?, 'debit', ?, 'Other')",
+            [walletId, txn.insertId, -amount, `Card Transfer: ${card[0].brand} (•••• ${card[0].last4})`]
+        );
+
+        await connection.commit();
+
+        // 7. Notification
+        const notifTitle = "Card Transfer Successful";
+        const notifMsg = `💳 $${amount} sent to your ${card[0].brand} card ending in ${card[0].last4}.`;
+        await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [userId, notifTitle, notifMsg, txn.insertId]);
+
+        if (global.io) {
+            global.io.to(`user_${userId}`).emit('NOTIFICATION_RECEIVED', {
+                title: notifTitle,
+                message: notifMsg,
+                type: 'payment',
+                time: "Just now",
+                txn_amount: amount,
+                sender_name: "Wallet",
+                receiver_name: `${card[0].brand} Card`
+            });
+        }
+
+        res.json({ message: "Transfer successful" });
+    } catch (error) {
+        if (connection) await connection.rollback();
+        console.error(error);
+        res.status(500).json({ message: "Card transfer failed" });
     } finally {
         if (connection) connection.release();
     }

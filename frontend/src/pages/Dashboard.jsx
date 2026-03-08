@@ -137,6 +137,9 @@ const Dashboard = () => {
                     <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }} onClick={() => navigate('/bills')}>
                         <span>📄 Bills</span>
                     </button>
+                    <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }} onClick={() => navigate('/transfer-to-card')}>
+                        <span>🔄 To Card</span>
+                    </button>
                 </div>
 
                 {showQR && (
