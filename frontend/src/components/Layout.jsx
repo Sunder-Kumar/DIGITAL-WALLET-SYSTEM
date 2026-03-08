@@ -105,7 +105,7 @@ const Layout = ({ children }) => {
     { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
     { path: '/transactions', label: 'History', icon: '📊' },
     { path: '/scan', label: 'Scan', icon: '📷' },
-    { path: '/insights', label: 'Insights', icon: '💡' },
+    { path: '/insights', label: 'Summary', icon: '📈' },
     { path: '/profile', label: 'Profile', icon: '👤' }
   ];
 
@@ -113,7 +113,7 @@ const Layout = ({ children }) => {
     { path: '/dashboard', icon: '🏠' },
     { path: '/transactions', icon: '📊' },
     { path: '/contacts', icon: '👥' },
-    { path: '/insights', icon: '💡' }
+    { path: '/insights', icon: '📈' }
   ];
 
   return (
