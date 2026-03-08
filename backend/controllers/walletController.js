@@ -26,14 +26,14 @@ exports.addMoney = async (req, res) => {
 
         // 2. Create Transaction Record
         const [txn] = await connection.query(
-            "INSERT INTO Transactions (sender_wallet_id, receiver_wallet_id, amount, transaction_type, status) VALUES (?, ?, ?, 'deposit', 'completed')",
-            [null, walletId, amount]
+            "INSERT INTO Transactions (sender_wallet_id, receiver_wallet_id, amount, transaction_type, status, category, note) VALUES (?, ?, ?, 'deposit', 'completed', ?, ?)",
+            [null, walletId, amount, 'Other', `Deposit from ${source_type || 'Linked Method'}`]
         );
 
         // 3. Ledger Entry (Credit)
         await connection.query(
-            "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description) VALUES (?, ?, ?, 'credit', ?)",
-            [walletId, txn.insertId, amount, 'credit', `Deposit from ${source_type || 'Linked Method'}`]
+            "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description, category, note) VALUES (?, ?, ?, 'credit', ?, ?, ?)",
+            [walletId, txn.insertId, amount, 'credit', `Deposit from ${source_type || 'Linked Method'}`, 'Other', `Deposit from ${source_type || 'Linked Method'}`]
         );
 
         await connection.commit();
