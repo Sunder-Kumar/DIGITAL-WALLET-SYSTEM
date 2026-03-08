@@ -74,13 +74,13 @@ exports.sendMoney = async (req, res) => {
         // Entry A: Debit Sender
         await connection.query(
             "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description, category, note) VALUES (?, ?, ?, 'debit', ?, ?, ?)",
-            [senderWallet[0].wallet_id, transactionId, transferAmount.negated().toNumber(), 'debit', `Transfer to ${receiver_email}`, category || 'Other', note || null]
+            [senderWallet[0].wallet_id, transactionId, transferAmount.negated().toNumber(), `Transfer to ${receiver_email}`, category || 'Other', note || null]
         );
 
         // Entry B: Credit Receiver
         await connection.query(
             "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description, category, note) VALUES (?, ?, ?, 'credit', ?, ?, ?)",
-            [receiverWallet[0].wallet_id, transactionId, transferAmount.toNumber(), 'credit', `Received from ${req.user.email}`, category || 'Other', note || null]
+            [receiverWallet[0].wallet_id, transactionId, transferAmount.toNumber(), `Received from ${req.user.email}`, category || 'Other', note || null]
         );
 
         if (riskLevel !== 'low') {
@@ -309,14 +309,14 @@ exports.payBill = async (req, res) => {
 
         // 2. Main Transaction
         const [txn] = await connection.query(
-            "INSERT INTO Transactions (sender_wallet_id, amount, transaction_type, status) VALUES (?, ?, 'payment', 'completed')",
-            [wallet[0].wallet_id, amount]
+            "INSERT INTO Transactions (sender_wallet_id, amount, transaction_type, status, category, note) VALUES (?, ?, 'payment', 'completed', ?, ?)",
+            [wallet[0].wallet_id, amount, category || 'Other', note || null]
         );
 
         // 3. Ledger (Debit)
         await connection.query(
-            "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description) VALUES (?, ?, ?, 'debit', ?)",
-            [wallet[0].wallet_id, txn.insertId, -amount, 'debit', `Bill Payment: ${biller_name} (${category})`]
+            "INSERT INTO Ledger (wallet_id, transaction_id, amount, entry_type, description, category, note) VALUES (?, ?, ?, 'debit', ?, ?, ?)",
+            [wallet[0].wallet_id, txn.insertId, -amount, 'debit', `Bill Payment: ${biller_name} (${category})`, category || 'Other', note || null]
         );
 
         await connection.commit();
