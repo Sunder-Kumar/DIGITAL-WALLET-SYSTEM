@@ -50,7 +50,7 @@ const Layout = ({ children }) => {
     if (!token) return;
     fetchNotifications();
 
-    const socket = io('http://localhost:5000');
+    const socket = io('http://192.168.0.38:5000');
     socket.emit('join_room', storedUser.id);
 
     socket.on('NOTIFICATION_RECEIVED', (data) => {
@@ -62,7 +62,7 @@ const Layout = ({ children }) => {
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/notifications', {
+      const res = await axios.get('http://192.168.0.38:5000/api/notifications', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(res.data);
@@ -71,7 +71,7 @@ const Layout = ({ children }) => {
 
   const handleClearNotifications = async () => {
     try {
-      await axios.delete('http://localhost:5000/api/notifications', {
+      await axios.delete('http://192.168.0.38:5000/api/notifications', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications([]);
@@ -84,7 +84,7 @@ const Layout = ({ children }) => {
     if (query.length > 1) {
       setIsSearching(true);
       try {
-        const res = await axios.get(`http://localhost:5000/api/users/search?query=${query}`, {
+        const res = await axios.get(`http://192.168.0.38:5000/api/users/search?query=${query}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSearchResults(res.data);

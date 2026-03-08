@@ -25,7 +25,7 @@ const LinkBank = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/wallet/banks', 
+            await axios.post('http://192.168.0.38:5000/api/wallet/banks', 
                 { bankName: selectedBank.name, accountType: 'checking' },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

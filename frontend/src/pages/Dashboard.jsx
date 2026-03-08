@@ -25,7 +25,7 @@ const Dashboard = () => {
         setUser(storedUser);
         fetchData();
 
-        const socket = io('http://localhost:5000');
+        const socket = io('http://192.168.0.38:5000');
         socket.on('connect', () => socket.emit('join_room', storedUser.id));
         socket.on('PAYMENT_RECEIVED', () => fetchData()); 
 
@@ -39,10 +39,10 @@ const Dashboard = () => {
     const fetchData = async () => {
         try {
             const [walletRes, txnRes, analyticsRes, cardsRes] = await Promise.all([
-                axios.get('http://localhost:5000/api/wallet', config),
-                axios.get('http://localhost:5000/api/transactions', config),
-                axios.get('http://localhost:5000/api/analytics/insights', config),
-                axios.get('http://localhost:5000/api/wallet/cards', config)
+                axios.get('http://192.168.0.38:5000/api/wallet', config),
+                axios.get('http://192.168.0.38:5000/api/transactions', config),
+                axios.get('http://192.168.0.38:5000/api/analytics/insights', config),
+                axios.get('http://192.168.0.38:5000/api/wallet/cards', config)
             ]);
             
             setBalance(walletRes.data.balance);

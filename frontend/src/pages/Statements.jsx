@@ -20,7 +20,7 @@ const Statements = () => {
     const fetchStatement = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:5000/api/transactions/statement?month=${month}&year=${year}`, config);
+            const res = await axios.get(`http://192.168.0.38:5000/api/transactions/statement?month=${month}&year=${year}`, config);
             setData(res.data);
         } catch (err) {
             console.error(err);

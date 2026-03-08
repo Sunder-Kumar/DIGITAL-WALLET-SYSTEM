@@ -51,9 +51,9 @@ const SendMoney = () => {
     const fetchData = async () => {
         try {
             const [walletRes, banksRes, cardsRes] = await Promise.all([
-                axios.get('http://localhost:5000/api/wallet', config),
-                axios.get('http://localhost:5000/api/wallet/banks', config),
-                axios.get('http://localhost:5000/api/wallet/cards', config)
+                axios.get('http://192.168.0.38:5000/api/wallet', config),
+                axios.get('http://192.168.0.38:5000/api/wallet/banks', config),
+                axios.get('http://192.168.0.38:5000/api/wallet/cards', config)
             ]);
             
             setBalance(parseFloat(walletRes.data.balance));
@@ -75,13 +75,13 @@ const SendMoney = () => {
             let payload = { amount: parseFloat(amount), pin };
 
             if (destinationType === 'contact') {
-                endpoint = 'http://localhost:5000/api/transaction/send';
+                endpoint = 'http://192.168.0.38:5000/api/transaction/send';
                 payload = { ...payload, receiver_email: receiverEmail, category, note };
             } else if (destinationType === 'bank') {
-                endpoint = 'http://localhost:5000/api/wallet/withdraw';
+                endpoint = 'http://192.168.0.38:5000/api/wallet/withdraw';
                 payload = { ...payload, bank_id: selectedBank.bank_account_id };
             } else if (destinationType === 'card') {
-                endpoint = 'http://localhost:5000/api/wallet/transfer-to-card';
+                endpoint = 'http://192.168.0.38:5000/api/wallet/transfer-to-card';
                 payload = { ...payload, card_id: selectedCard.card_id };
             }
 

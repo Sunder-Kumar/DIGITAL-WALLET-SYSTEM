@@ -15,7 +15,7 @@ const Register = () => {
         setLoading(true);
         setError('');
         try {
-            await axios.post('http://localhost:5000/api/register', { name, email, password });
+            await axios.post('http://192.168.0.38:5000/api/register', { name, email, password });
             navigate('/login');
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to create account');

@@ -14,7 +14,7 @@ const KYC = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/kyc/submit', 
+            await axios.post('http://192.168.0.38:5000/api/kyc/submit', 
                 { id_type: idType, id_number: idNumber },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

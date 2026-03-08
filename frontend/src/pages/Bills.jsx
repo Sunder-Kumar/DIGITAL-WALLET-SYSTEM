@@ -21,7 +21,7 @@ const Bills = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/transaction/pay-bill', {
+            await axios.post('http://192.168.0.38:5000/api/transaction/pay-bill', {
                 biller_name: selectedBiller,
                 amount: parseFloat(amount),
                 category: selectedCategory || 'Other'
