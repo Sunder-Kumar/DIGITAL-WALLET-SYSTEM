@@ -196,36 +196,33 @@ exports.sendMoney = async (req, res) => {
 
 exports.getTransactions = async (req, res) => {
     try {
-        // Get wallet ID first
         const [wallet] = await db.query("SELECT wallet_id FROM Wallets WHERE user_id = ?", [req.user.id]);
         if (wallet.length === 0) return res.status(404).json({ message: "Wallet not found" });
-
         const walletId = wallet[0].wallet_id;
         
-        const [transactions] = await db.query(
-            `SELECT t.*, u.email as other_party_email,
-             COALESCE(
-                CASE 
-                    WHEN t.transaction_type = 'transfer' THEN u.email
-                    WHEN t.transaction_type = 'deposit' THEN REPLACE(t.note, 'Deposit from ', '')
-                    WHEN t.transaction_type = 'withdrawal' THEN REPLACE(REPLACE(t.note, 'Withdrawal to ', ''), 'Transfer to ', '')
-                END,
-                t.note,
-                t.transaction_type
-             ) as entity_name
+        const [rows] = await db.query(
+            `SELECT t.*, u.email as other_party_email 
              FROM Transactions t
              LEFT JOIN Wallets w_sender ON t.sender_wallet_id = w_sender.wallet_id
              LEFT JOIN Wallets w_receiver ON t.receiver_wallet_id = w_receiver.wallet_id
              LEFT JOIN Users u ON (
-                CASE 
-                    WHEN t.sender_wallet_id = ? THEN w_receiver.user_id 
-                    ELSE w_sender.user_id 
-                END = u.user_id
+                CASE WHEN t.sender_wallet_id = ? THEN w_receiver.user_id ELSE w_sender.user_id END = u.user_id
              )
              WHERE t.sender_wallet_id = ? OR t.receiver_wallet_id = ?
              ORDER BY t.timestamp DESC`, 
              [walletId, walletId, walletId]
         );
+
+        // Process rows in JS for maximum reliability
+        const transactions = rows.map(t => {
+            let name = t.other_party_email || t.note || t.transaction_type;
+            
+            // Clean up common labels
+            if (t.transaction_type === 'deposit') name = name.replace('Deposit from ', '');
+            if (t.transaction_type === 'withdrawal') name = name.replace('Withdrawal to ', '').replace('Transfer to ', '');
+            
+            return { ...t, entity_name: name || 'SecureWallet' };
+        });
 
         res.json(transactions);
     } catch (error) {
