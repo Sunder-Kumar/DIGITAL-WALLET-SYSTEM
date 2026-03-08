@@ -1,8 +1,11 @@
 const express = require('express');
+const https = require('https');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const fs = require('fs');
+const selfsigned = require('selfsigned');
 
 dotenv.config();
 
@@ -12,7 +15,30 @@ const rateLimit = require('express-rate-limit');
 const apiRoutes = require('./routes/api');
 
 const app = express();
-const server = http.createServer(app);
+
+// SSL Certificate Generation for local development
+let server;
+const certPath = './cert.pem';
+const keyPath = './key.pem';
+
+if (process.env.NODE_ENV !== 'production') {
+  let cert, key;
+  if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+    cert = fs.readFileSync(certPath);
+    key = fs.readFileSync(keyPath);
+  } else {
+    const attrs = [{ name: 'commonName', value: '192.168.0.38' }];
+    const pems = selfsigned.generate(attrs, { days: 365 });
+    cert = pems.cert;
+    key = pems.private;
+    fs.writeFileSync(certPath, cert);
+    fs.writeFileSync(keyPath, key);
+  }
+  server = https.createServer({ key, cert }, app);
+} else {
+  server = http.createServer(app);
+}
+
 const io = new Server(server, {
   cors: {
     origin: "*", // In production, restrict to your frontend URL

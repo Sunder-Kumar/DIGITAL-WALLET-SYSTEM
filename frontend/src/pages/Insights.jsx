@@ -20,7 +20,7 @@ const Insights = () => {
         setLoading(true);
         setError(null);
         try {
-            const res = await axios.get('http://192.168.0.38:5000/api/analytics/insights', config);
+            const res = await axios.get('https://192.168.0.38:5000/api/analytics/insights', config);
             setData(res.data);
         } catch (err) { 
             console.error(err); 

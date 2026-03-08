@@ -18,8 +18,8 @@ const ConnectedCards = () => {
             const headers = { Authorization: `Bearer ${token}` };
             
             const [cardsRes, banksRes] = await Promise.all([
-                axios.get('http://192.168.0.38:5000/api/wallet/cards', { headers }),
-                axios.get('http://192.168.0.38:5000/api/wallet/banks', { headers })
+                axios.get('https://192.168.0.38:5000/api/wallet/cards', { headers }),
+                axios.get('https://192.168.0.38:5000/api/wallet/banks', { headers })
             ]);
             
             setCards(cardsRes.data);
@@ -35,7 +35,7 @@ const ConnectedCards = () => {
         if (!window.confirm("Are you sure you want to remove this card?")) return;
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://192.168.0.38:5000/api/wallet/cards/${cardId}`, {
+            await axios.delete(`https://192.168.0.38:5000/api/wallet/cards/${cardId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchData();
@@ -49,7 +49,7 @@ const ConnectedCards = () => {
         if (!window.confirm("Are you sure you want to unlink this bank account?")) return;
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://192.168.0.38:5000/api/wallet/banks/${bankId}`, {
+            await axios.delete(`https://192.168.0.38:5000/api/wallet/banks/${bankId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchData();
@@ -62,7 +62,7 @@ const ConnectedCards = () => {
     const handleSetPrimary = async (cardId) => {
         try {
             const token = localStorage.getItem('token');
-            await axios.patch(`http://192.168.0.38:5000/api/wallet/cards/${cardId}/primary`, {}, {
+            await axios.patch(`https://192.168.0.38:5000/api/wallet/cards/${cardId}/primary`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchData();

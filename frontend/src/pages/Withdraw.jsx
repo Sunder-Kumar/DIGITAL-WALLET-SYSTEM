@@ -22,14 +22,14 @@ const Withdraw = () => {
 
     const fetchBalance = async () => {
         try {
-            const res = await axios.get('http://192.168.0.38:5000/api/wallet', { headers });
+            const res = await axios.get('https://192.168.0.38:5000/api/wallet', { headers });
             setBalance(parseFloat(res.data.balance));
         } catch (err) { console.error(err); }
     };
 
     const fetchBanks = async () => {
         try {
-            const res = await axios.get('http://192.168.0.38:5000/api/wallet/banks', { headers });
+            const res = await axios.get('https://192.168.0.38:5000/api/wallet/banks', { headers });
             setBanks(res.data);
             if (res.data.length > 0) setSelectedBank(res.data[0]);
         } catch (err) { console.error(err); }
@@ -42,7 +42,7 @@ const Withdraw = () => {
         
         setLoading(true);
         try {
-            await axios.post('http://192.168.0.38:5000/api/wallet/withdraw', {
+            await axios.post('https://192.168.0.38:5000/api/wallet/withdraw', {
                 amount: parseFloat(amount),
                 bank_id: selectedBank.bank_account_id,
                 pin

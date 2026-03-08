@@ -17,10 +17,10 @@ const Transactions = () => {
 
     const fetchData = async () => {
         try {
-            const walletRes = await axios.get('http://192.168.0.38:5000/api/wallet', config);
+            const walletRes = await axios.get('https://192.168.0.38:5000/api/wallet', config);
             setWalletId(walletRes.data.wallet_id);
             
-            const txnRes = await axios.get('http://192.168.0.38:5000/api/transactions', config);
+            const txnRes = await axios.get('https://192.168.0.38:5000/api/transactions', config);
             setTransactions(txnRes.data);
         } catch (err) {
             console.error(err);
