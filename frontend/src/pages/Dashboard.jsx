@@ -128,17 +128,11 @@ const Dashboard = () => {
                     <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }} onClick={() => navigate('/request')}>
                         <span>📥 Request</span>
                     </button>
-                    <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }} onClick={() => navigate('/withdraw')}>
-                        <span>📤 Withdraw</span>
-                    </button>
                     <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }} onClick={() => navigate('/add-money')}>
-                        <span>💳 Add</span>
+                        <span>💳 Add Funds</span>
                     </button>
                     <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }} onClick={() => navigate('/bills')}>
-                        <span>📄 Bills</span>
-                    </button>
-                    <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }} onClick={() => navigate('/transfer-to-card')}>
-                        <span>🔄 To Card</span>
+                        <span>📄 Pay Bills</span>
                     </button>
                 </div>
 
