@@ -20,7 +20,12 @@ const Login = () => {
             navigate('/dashboard');
             window.location.reload(); 
         } catch (err) {
-            setError(err.response?.data?.message || 'Invalid email or password');
+            console.error("Login Error:", err);
+            if (err.code === 'ERR_NETWORK') {
+                setError('Network Error: Cannot connect to backend. This might be due to a Mixed Content block (HTTPS frontend calling HTTP backend).');
+            } else {
+                setError(err.response?.data?.message || 'Login failed. Please check your credentials and network connection.');
+            }
         } finally {
             setLoading(false);
         }
