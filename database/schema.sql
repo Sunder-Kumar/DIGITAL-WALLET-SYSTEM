@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS secure_wallet_db;
 USE secure_wallet_db;
 
--- 1. Identity & Compliance (Pillar 2)
+-- 1. Identity & Compliance
 CREATE TABLE IF NOT EXISTS Users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -9,25 +9,12 @@ CREATE TABLE IF NOT EXISTS Users (
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('user', 'admin') DEFAULT 'user',
     kyc_status ENUM('pending', 'verified', 'rejected', 'unverified') DEFAULT 'unverified',
-    mfa_enabled BOOLEAN DEFAULT FALSE,
+    mfa_enabled TINYINT(1) DEFAULT 0,
     mfa_secret VARCHAR(255), -- Encrypted TOTP Secret
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Double-Entry Ledger System (Pillar 1)
-CREATE TABLE IF NOT EXISTS Ledger (
-    entry_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    wallet_id INT NOT NULL,
-    transaction_id INT NOT NULL,
-    amount DECIMAL(19, 4) NOT NULL, -- Debit is negative, Credit is positive
-    entry_type ENUM('debit', 'credit') NOT NULL,
-    description VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX (wallet_id),
-    INDEX (transaction_id)
-);
-
--- 3. High-Performance Wallet Cache
+-- 2. High-Performance Wallet Cache
 CREATE TABLE IF NOT EXISTS Wallets (
     wallet_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNIQUE NOT NULL,
@@ -39,7 +26,7 @@ CREATE TABLE IF NOT EXISTS Wallets (
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
 
--- 4. Transactions Ledger Metadata
+-- 3. Transactions Ledger Metadata
 CREATE TABLE IF NOT EXISTS Transactions (
     transaction_id INT AUTO_INCREMENT PRIMARY KEY,
     sender_wallet_id INT,
@@ -55,7 +42,22 @@ CREATE TABLE IF NOT EXISTS Transactions (
     FOREIGN KEY (receiver_wallet_id) REFERENCES Wallets(wallet_id)
 );
 
--- 5. Audit & Security (Pillar 4)
+-- 4. Double-Entry Ledger System (Source of Truth)
+CREATE TABLE IF NOT EXISTS Ledger (
+    entry_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    wallet_id INT NOT NULL,
+    transaction_id INT NOT NULL,
+    amount DECIMAL(19, 4) NOT NULL, -- Debit is negative, Credit is positive
+    entry_type ENUM('debit', 'credit') NOT NULL,
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX (wallet_id),
+    INDEX (transaction_id),
+    FOREIGN KEY (wallet_id) REFERENCES Wallets(wallet_id) ON DELETE CASCADE,
+    FOREIGN KEY (transaction_id) REFERENCES Transactions(transaction_id) ON DELETE CASCADE
+);
+
+-- 5. Audit & Security
 CREATE TABLE IF NOT EXISTS Audit_Logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -66,7 +68,7 @@ CREATE TABLE IF NOT EXISTS Audit_Logs (
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6. User Verification Documents (KYC Pillar 2)
+-- 6. User Verification Documents (KYC)
 CREATE TABLE IF NOT EXISTS KYC_Documents (
     doc_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -78,7 +80,7 @@ CREATE TABLE IF NOT EXISTS KYC_Documents (
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
 
--- 7. Payment Methods (Pillar 4 Security)
+-- 7. Payment Methods
 CREATE TABLE IF NOT EXISTS Cards (
     card_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -86,19 +88,19 @@ CREATE TABLE IF NOT EXISTS Cards (
     brand VARCHAR(50) DEFAULT 'Visa',
     last4 VARCHAR(4) NOT NULL,
     encrypted_details TEXT NOT NULL,
-    is_primary BOOLEAN DEFAULT FALSE,
+    is_primary TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
 
--- 8. Bank Account Linking (Pillar 5 Integration)
+-- 8. Bank Account Linking
 CREATE TABLE IF NOT EXISTS Bank_Accounts (
     bank_account_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     bank_name VARCHAR(100) NOT NULL,
     account_type ENUM('checking', 'savings') DEFAULT 'checking',
     account_number_last4 VARCHAR(4) NOT NULL,
-    is_verified BOOLEAN DEFAULT TRUE,
+    is_verified TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
@@ -109,9 +111,9 @@ CREATE TABLE IF NOT EXISTS Fraud_Alerts (
     transaction_id INT NOT NULL,
     risk_level ENUM('low', 'medium', 'high', 'critical') DEFAULT 'low',
     details TEXT,
-    is_resolved BOOLEAN DEFAULT FALSE,
+    is_resolved TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (transaction_id) REFERENCES Transactions(transaction_id)
+    FOREIGN KEY (transaction_id) REFERENCES Transactions(transaction_id) ON DELETE CASCADE
 );
 
 -- 10. User Notifications
@@ -121,7 +123,7 @@ CREATE TABLE IF NOT EXISTS Notifications (
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     type VARCHAR(50) DEFAULT 'general',
-    is_read BOOLEAN DEFAULT FALSE,
+    is_read TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
