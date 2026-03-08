@@ -18,8 +18,8 @@ const ConnectedCards = () => {
             const headers = { Authorization: `Bearer ${token}` };
             
             const [cardsRes, banksRes] = await Promise.all([
-                axios.get('https://192.168.0.38:5000/api/wallet/cards', { headers }),
-                axios.get('https://192.168.0.38:5000/api/wallet/banks', { headers })
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/cards', { headers }),
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/banks', { headers })
             ]);
             
             setCards(cardsRes.data);
@@ -171,3 +171,4 @@ const ConnectedCards = () => {
 };
 
 export default ConnectedCards;
+

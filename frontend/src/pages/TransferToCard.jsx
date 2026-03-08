@@ -22,14 +22,14 @@ const TransferToCard = () => {
 
     const fetchBalance = async () => {
         try {
-            const res = await axios.get('https://192.168.0.38:5000/api/wallet', { headers });
+            const res = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet', { headers });
             setBalance(parseFloat(res.data.balance));
         } catch (err) { console.error(err); }
     };
 
     const fetchCards = async () => {
         try {
-            const res = await axios.get('https://192.168.0.38:5000/api/wallet/cards', { headers });
+            const res = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/cards', { headers });
             setCards(res.data);
             if (res.data.length > 0) {
                 const primary = res.data.find(c => c.is_primary) || res.data[0];
@@ -45,7 +45,7 @@ const TransferToCard = () => {
         
         setLoading(true);
         try {
-            await axios.post('https://192.168.0.38:5000/api/wallet/transfer-to-card', {
+            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/transfer-to-card', {
                 amount: parseFloat(amount),
                 card_id: selectedCard.card_id,
                 pin
@@ -168,3 +168,4 @@ const TransferToCard = () => {
 };
 
 export default TransferToCard;
+

@@ -17,7 +17,7 @@ const Contacts = () => {
         try {
             // Simulate API delay for professional feel
             await new Promise(resolve => setTimeout(resolve, 1500));
-            const res = await axios.get('https://192.168.0.38:5000/api/auth/users/search?query=', config);
+            const res = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/auth/users/search?query=', config);
             setContacts(res.data);
             setIsSynced(true);
             localStorage.setItem('contacts_synced', 'true');
@@ -141,3 +141,4 @@ const Contacts = () => {
 };
 
 export default Contacts;
+

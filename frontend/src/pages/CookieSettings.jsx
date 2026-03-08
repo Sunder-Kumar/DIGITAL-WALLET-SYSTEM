@@ -71,3 +71,4 @@ const CookieSettings = () => {
 };
 
 export default CookieSettings;
+

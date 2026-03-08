@@ -16,6 +16,14 @@ const apiRoutes = require('./routes/api');
 
 const app = express();
 
+// CORS Configuration
+const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : ["*"];
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  credentials: true
+}));
+
 // SSL Certificate Generation for local development
 let server;
 const certPath = './cert.pem';
@@ -54,7 +62,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 const io = new Server(server, {
   cors: {
-    origin: "*", // In production, restrict to your frontend URL
+    origin: allowedOrigins,
     methods: ["GET", "POST"]
   }
 });
@@ -84,7 +92,6 @@ io.on('connection', (socket) => {
 
 // Security Middleware
 app.use(helmet());
-app.use(cors());
 app.use(express.json());
 
 // Logging

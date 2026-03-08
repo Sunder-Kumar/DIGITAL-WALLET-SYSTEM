@@ -13,8 +13,9 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
         setError('');
+        const API_URL = import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000';
         try {
-            const res = await axios.post('https://192.168.0.38:5000/api/login', { email, password });
+            const res = await axios.post(`${API_URL}/api/login`, { email, password });
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
             navigate('/dashboard');
@@ -123,3 +124,4 @@ const Login = () => {
 };
 
 export default Login;
+

@@ -51,9 +51,9 @@ const SendMoney = () => {
     const fetchData = async () => {
         try {
             const [walletRes, banksRes, cardsRes] = await Promise.all([
-                axios.get('https://192.168.0.38:5000/api/wallet', config),
-                axios.get('https://192.168.0.38:5000/api/wallet/banks', config),
-                axios.get('https://192.168.0.38:5000/api/wallet/cards', config)
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet', config),
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/banks', config),
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/cards', config)
             ]);
             
             setBalance(parseFloat(walletRes.data.balance));
@@ -75,13 +75,13 @@ const SendMoney = () => {
             let payload = { amount: parseFloat(amount), pin };
 
             if (destinationType === 'contact') {
-                endpoint = 'https://192.168.0.38:5000/api/transaction/send';
+                endpoint = (import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/transaction/send';
                 payload = { ...payload, receiver_email: receiverEmail, category, note };
             } else if (destinationType === 'bank') {
-                endpoint = 'https://192.168.0.38:5000/api/wallet/withdraw';
+                endpoint = (import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/withdraw';
                 payload = { ...payload, bank_id: selectedBank.bank_account_id };
             } else if (destinationType === 'card') {
-                endpoint = 'https://192.168.0.38:5000/api/wallet/transfer-to-card';
+                endpoint = (import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/transfer-to-card';
                 payload = { ...payload, card_id: selectedCard.card_id };
             }
 
@@ -308,3 +308,4 @@ const SendMoney = () => {
 };
 
 export default SendMoney;
+

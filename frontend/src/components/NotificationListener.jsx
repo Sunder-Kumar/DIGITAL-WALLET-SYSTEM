@@ -8,7 +8,7 @@ const NotificationListener = () => {
         if (!storedUser) return;
         const user = JSON.parse(storedUser);
 
-        const socket = io('https://192.168.0.38:5000');
+        const socket = io((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '');
 
         socket.on('connect', () => {
             socket.emit('join_room', user.id);
@@ -45,3 +45,4 @@ const NotificationListener = () => {
 };
 
 export default NotificationListener;
+

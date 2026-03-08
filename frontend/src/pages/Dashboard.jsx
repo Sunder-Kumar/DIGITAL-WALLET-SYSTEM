@@ -25,7 +25,7 @@ const Dashboard = () => {
         setUser(storedUser);
         fetchData();
 
-        const socket = io('https://192.168.0.38:5000');
+        const socket = io((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '');
         socket.on('connect', () => socket.emit('join_room', storedUser.id));
         
         socket.on('NOTIFICATION_RECEIVED', () => {
@@ -45,10 +45,10 @@ const Dashboard = () => {
     const fetchData = async () => {
         try {
             const [walletRes, txnRes, analyticsRes, cardsRes] = await Promise.all([
-                axios.get('https://192.168.0.38:5000/api/wallet', config),
-                axios.get('https://192.168.0.38:5000/api/transactions', config),
-                axios.get('https://192.168.0.38:5000/api/analytics/insights', config),
-                axios.get('https://192.168.0.38:5000/api/wallet/cards', config)
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet', config),
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/transactions', config),
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/analytics/insights', config),
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/cards', config)
             ]);
             
             setBalance(walletRes.data.balance);
@@ -234,3 +234,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

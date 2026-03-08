@@ -167,3 +167,4 @@ const Scan = () => {
 };
 
 export default Scan;
+

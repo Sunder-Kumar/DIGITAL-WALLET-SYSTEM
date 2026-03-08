@@ -21,7 +21,7 @@ const Bills = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            await axios.post('https://192.168.0.38:5000/api/transaction/pay-bill', {
+            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/transaction/pay-bill', {
                 biller_name: selectedBiller,
                 amount: parseFloat(amount),
                 category: selectedCategory || 'Other'
@@ -84,3 +84,4 @@ const Bills = () => {
 };
 
 export default Bills;
+

@@ -15,7 +15,7 @@ const Register = () => {
         setLoading(true);
         setError('');
         try {
-            await axios.post('https://192.168.0.38:5000/api/register', { name, email, password });
+            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/register', { name, email, password });
             navigate('/login');
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to create account');
@@ -101,3 +101,4 @@ const Register = () => {
 };
 
 export default Register;
+

@@ -20,7 +20,7 @@ const Security = () => {
     const fetchProfile = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('https://192.168.0.38:5000/api/profile', {
+            const res = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/profile', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setMfaEnabled(res.data.mfa_enabled);
@@ -31,7 +31,7 @@ const Security = () => {
     const setupMFA = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post('https://192.168.0.38:5000/api/mfa/setup', {}, {
+            const res = await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/mfa/setup', {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setQrCode(res.data.qrCode);
@@ -42,7 +42,7 @@ const Security = () => {
     const verifyMFA = async () => {
         try {
             const token = localStorage.getItem('token');
-            await axios.post('https://192.168.0.38:5000/api/mfa/verify', { token: otpToken }, {
+            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/mfa/verify', { token: otpToken }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setMfaEnabled(true);
@@ -55,7 +55,7 @@ const Security = () => {
         if (pin.length !== 4) return alert("PIN must be 4 digits");
         try {
             const token = localStorage.getItem('token');
-            await axios.post('https://192.168.0.38:5000/api/auth/pin/set', { pin }, {
+            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/auth/pin/set', { pin }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPinSet(true);
@@ -69,7 +69,7 @@ const Security = () => {
         if (newPin.length !== 4) return alert("New PIN must be 4 digits");
         try {
             const token = localStorage.getItem('token');
-            await axios.post('https://192.168.0.38:5000/api/auth/pin/change', { oldPin, newPin }, {
+            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/auth/pin/change', { oldPin, newPin }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setStep('overview');
@@ -203,3 +203,4 @@ const Security = () => {
 };
 
 export default Security;
+

@@ -21,7 +21,7 @@ const Admin = () => {
         fetchData();
 
         // Pillar 3: Real-time Admin Monitoring
-        const socket = io('https://192.168.0.38:5000');
+        const socket = io((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '');
         socket.emit('join_admin_monitor');
 
         socket.on('NEW_FRAUD_ALERT', (alert) => {
@@ -39,9 +39,9 @@ const Admin = () => {
     const fetchData = async () => {
         try {
             const [statsRes, flaggedRes, usersRes] = await Promise.all([
-                axios.get('https://192.168.0.38:5000/api/admin/stats', config),
-                axios.get('https://192.168.0.38:5000/api/admin/flagged', config),
-                axios.get('https://192.168.0.38:5000/api/admin/users', config)
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/admin/stats', config),
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/admin/flagged', config),
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/admin/users', config)
             ]);
             setStats(statsRes.data);
             setFlaggedTxns(flaggedRes.data);
@@ -52,7 +52,7 @@ const Admin = () => {
 
     const handleKYC = async (userId, status) => {
         try {
-            await axios.post('https://192.168.0.38:5000/api/admin/kyc/update', { userId, status }, config);
+            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/admin/kyc/update', { userId, status }, config);
             fetchData();
             toast.success(`User ${status === 'verified' ? 'Approved' : 'Rejected'}`);
         } catch (err) { alert("Action failed"); }
@@ -193,3 +193,4 @@ const Admin = () => {
 };
 
 export default Admin;
+

@@ -50,7 +50,7 @@ const Layout = ({ children }) => {
     if (!token) return;
     fetchNotifications();
 
-    const socket = io('https://192.168.0.38:5000');
+    const socket = io((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '');
     socket.emit('join_room', storedUser.id);
 
     socket.on('NOTIFICATION_RECEIVED', (data) => {
@@ -62,7 +62,7 @@ const Layout = ({ children }) => {
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get('https://192.168.0.38:5000/api/notifications', {
+      const res = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/notifications', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(res.data);
@@ -71,7 +71,7 @@ const Layout = ({ children }) => {
 
   const handleClearNotifications = async () => {
     try {
-      await axios.delete('https://192.168.0.38:5000/api/notifications', {
+      await axios.delete((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/notifications', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications([]);
@@ -311,3 +311,4 @@ const Layout = ({ children }) => {
 };
 
 export default Layout;
+

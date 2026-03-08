@@ -20,7 +20,7 @@ const AddMoney = () => {
 
     const fetchBalance = async () => {
         try {
-            const res = await axios.get('https://192.168.0.38:5000/api/wallet', { headers });
+            const res = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet', { headers });
             setBalance(res.data.balance);
         } catch (err) { console.error(err); }
     };
@@ -28,8 +28,8 @@ const AddMoney = () => {
     const fetchMethods = async () => {
         try {
             const [cardsRes, banksRes] = await Promise.all([
-                axios.get('https://192.168.0.38:5000/api/wallet/cards', { headers }),
-                axios.get('https://192.168.0.38:5000/api/wallet/banks', { headers })
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/cards', { headers }),
+                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/banks', { headers })
             ]);
             
             const allMethods = [
@@ -46,7 +46,7 @@ const AddMoney = () => {
         if (!selectedMethod) return alert("Select a payment method");
         setLoading(true);
         try {
-            await axios.post('https://192.168.0.38:5000/api/wallet/add-money', {
+            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/add-money', {
                 amount: parseFloat(amount),
                 source_id: selectedMethod.id,
                 source_type: selectedMethod.label
@@ -116,3 +116,4 @@ const AddMoney = () => {
 };
 
 export default AddMoney;
+
