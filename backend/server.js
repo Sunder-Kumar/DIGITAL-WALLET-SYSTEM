@@ -30,9 +30,15 @@ if (process.env.NODE_ENV !== 'production') {
     const attrs = [{ name: 'commonName', value: '192.168.0.38' }];
     const pems = selfsigned.generate(attrs, { days: 365 });
     cert = pems.cert;
-    key = pems.private;
-    fs.writeFileSync(certPath, cert);
-    fs.writeFileSync(keyPath, key);
+    key = pems.private || pems.privateKey; // Support different library versions
+    
+    if (cert && key) {
+      fs.writeFileSync(certPath, cert);
+      fs.writeFileSync(keyPath, key);
+    } else {
+      console.error("SSL Generation failed: pems object structure:", Object.keys(pems));
+      throw new Error("Could not generate SSL certificates");
+    }
   }
   server = https.createServer({ key, cert }, app);
 } else {
