@@ -6,11 +6,12 @@ const limitService = require('../services/transaction-service/limit-service');
 const auditService = require('../services/audit-service/index');
 
 exports.sendMoney = async (req, res) => {
-    const { receiver_email, amount, category, note } = req.body;
+    const { receiver_email, amount, category, note, pin } = req.body;
     const sender_id = req.user.id;
     const idempotencyKey = crypto.randomUUID(); // Built-in Node.js UUID
 
     if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
+    if (!pin) return res.status(400).json({ message: "Transaction PIN is required" });
 
     // Financial Precision (Pillar 1)
     const transferAmount = new Decimal(amount);
@@ -25,7 +26,19 @@ exports.sendMoney = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // 1. Pessimistic Locking (Pillar 1) - Prevent race conditions
+        // 1. PIN Verification & Pessimistic Locking
+        const [senderUser] = await connection.query("SELECT transaction_pin FROM Users WHERE user_id = ? FOR UPDATE", [sender_id]);
+        if (!senderUser[0].transaction_pin) {
+            await connection.rollback();
+            return res.status(400).json({ message: "Please set a transaction PIN in security settings first" });
+        }
+
+        const validPin = await bcrypt.compare(pin, senderUser[0].transaction_pin);
+        if (!validPin) {
+            await connection.rollback();
+            return res.status(400).json({ message: "Incorrect transaction PIN" });
+        }
+
         const [senderWallet] = await connection.query("SELECT * FROM Wallets WHERE user_id = ? FOR UPDATE", [sender_id]);
         if (senderWallet.length === 0) throw new Error("Sender wallet not found");
 

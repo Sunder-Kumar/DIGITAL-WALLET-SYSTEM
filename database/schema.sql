@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS Users (
     kyc_status ENUM('pending', 'verified', 'rejected', 'unverified') DEFAULT 'unverified',
     mfa_enabled TINYINT(1) DEFAULT 0,
     mfa_secret VARCHAR(255), -- Encrypted TOTP Secret
+    transaction_pin VARCHAR(255), -- Hashed 4-digit PIN
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

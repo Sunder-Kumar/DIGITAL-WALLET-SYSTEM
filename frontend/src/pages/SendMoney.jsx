@@ -9,9 +9,10 @@ const SendMoney = () => {
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('Other');
     const [note, setNote] = useState('');
+    const [pin, setPin] = useState('');
     const [balance, setBalance] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [step, setStep] = useState('input'); 
+    const [step, setStep] = useState('input'); // 'input' | 'pin' | 'success'
 
     const categories = [
         "Grocery", "Food & Dining", "Shopping", "Fuel / Petrol", 
@@ -43,16 +44,17 @@ const SendMoney = () => {
     };
 
     const handleSend = async () => {
+        if (pin.length !== 4) return alert("Please enter your 4-digit PIN");
         setLoading(true);
         try {
             const res = await axios.post('http://localhost:5000/api/transaction/send', 
-                { receiver_email: receiverEmail, amount: parseFloat(amount), category, note }, 
+                { receiver_email: receiverEmail, amount: parseFloat(amount), category, note, pin }, 
                 config
             );
             setStep('success');
         } catch (err) {
             alert(err.response?.data?.message || 'Transaction failed');
-            setStep('input');
+            setStep('pin'); // Go back to PIN if failed
         } finally {
             setLoading(false);
         }
@@ -67,6 +69,43 @@ const SendMoney = () => {
                 <h1 style={{ fontWeight: '800' }}>Sent Successfully!</h1>
                 <p style={{ color: 'var(--text-muted)', fontSize: '18px' }}>You sent <strong>${parseFloat(amount).toFixed(2)}</strong> to {receiverEmail}</p>
                 <button className="btn btn-primary" onClick={() => navigate('/dashboard')} style={{ width: '100%', marginTop: '40px' }}>Done</button>
+            </div>
+        );
+    }
+
+    if (step === 'pin') {
+        return (
+            <div style={{ padding: '24px', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="card" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', padding: '40px 20px' }}>
+                    <h2 style={{ marginBottom: '10px' }}>Enter PIN</h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '30px' }}>Confirm your transfer of <strong>${parseFloat(amount).toLocaleString()}</strong> to <strong>{receiverEmail}</strong></p>
+                    
+                    <input 
+                        type="password" 
+                        maxLength={4}
+                        value={pin}
+                        onChange={(e) => setPin(e.target.value)}
+                        placeholder="••••"
+                        style={{ width: '100%', fontSize: '40px', letterSpacing: '20px', textAlign: 'center', border: 'none', background: 'var(--bg-input)', padding: '20px', borderRadius: '15px', outline: 'none', color: 'var(--text-main)' }}
+                        autoFocus
+                    />
+
+                    <button 
+                        className="btn btn-primary" 
+                        style={{ width: '100%', marginTop: '30px', height: '55px', borderRadius: '15px', fontWeight: '700' }}
+                        onClick={handleSend}
+                        disabled={loading || pin.length !== 4}
+                    >
+                        {loading ? 'Verifying...' : 'Confirm & Pay'}
+                    </button>
+                    
+                    <button 
+                        onClick={() => setStep('input')}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', marginTop: '20px', cursor: 'pointer' }}
+                    >
+                        Cancel
+                    </button>
+                </div>
             </div>
         );
     }
@@ -166,10 +205,10 @@ const SendMoney = () => {
                 <button 
                     className="btn btn-primary" 
                     style={{ width: '100%', height: '60px', fontSize: '18px' }}
-                    onClick={handleSend}
+                    onClick={() => setStep('pin')}
                     disabled={loading || !amount || !receiverEmail}
                 >
-                    {loading ? 'Processing Transaction...' : 'Continue'}
+                    Continue
                 </button>
                 
                 <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', marginTop: '15px' }}>

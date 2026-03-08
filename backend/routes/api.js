@@ -22,6 +22,10 @@ router.delete('/notifications', verifyToken, notificationController.clearAll);
 router.post('/mfa/setup', verifyToken, authController.setup2FA);
 router.post('/mfa/verify', verifyToken, authController.verify2FA);
 
+// Transaction PIN Routes
+router.post('/auth/pin/set', verifyToken, authController.setTransactionPin);
+router.post('/auth/pin/change', verifyToken, authController.changeTransactionPin);
+
 // Pillar 2: KYC Routes
 router.post('/kyc/submit', verifyToken, authController.submitKYC);
 

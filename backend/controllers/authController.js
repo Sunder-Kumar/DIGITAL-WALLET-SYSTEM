@@ -137,10 +137,40 @@ exports.updateKYCStatus = async (req, res) => {
 
 exports.getUserProfile = async (req, res) => {
     try {
-        const [users] = await db.query("SELECT user_id, name, email, role, kyc_status, mfa_enabled, created_at FROM Users WHERE user_id = ?", [req.user.id]);
+        const [users] = await db.query("SELECT user_id, name, email, role, kyc_status, mfa_enabled, (transaction_pin IS NOT NULL) as pin_set, created_at FROM Users WHERE user_id = ?", [req.user.id]);
         res.json(users[0]);
     } catch (error) {
         res.status(500).json({ message: "Server error" });
+    }
+};
+
+exports.setTransactionPin = async (req, res) => {
+    const { pin } = req.body;
+    if (!/^\d{4}$/.test(pin)) return res.status(400).json({ message: "PIN must be 4 digits" });
+
+    try {
+        const hashedPin = await bcrypt.hash(pin, 10);
+        await db.query("UPDATE Users SET transaction_pin = ? WHERE user_id = ?", [hashedPin, req.user.id]);
+        res.json({ message: "Transaction PIN set successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to set PIN" });
+    }
+};
+
+exports.changeTransactionPin = async (req, res) => {
+    const { oldPin, newPin } = req.body;
+    if (!/^\d{4}$/.test(newPin)) return res.status(400).json({ message: "New PIN must be 4 digits" });
+
+    try {
+        const [user] = await db.query("SELECT transaction_pin FROM Users WHERE user_id = ?", [req.user.id]);
+        const validPin = await bcrypt.compare(oldPin, user[0].transaction_pin);
+        if (!validPin) return res.status(400).json({ message: "Current PIN is incorrect" });
+
+        const hashedPin = await bcrypt.hash(newPin, 10);
+        await db.query("UPDATE Users SET transaction_pin = ? WHERE user_id = ?", [hashedPin, req.user.id]);
+        res.json({ message: "Transaction PIN updated successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to update PIN" });
     }
 };
 
