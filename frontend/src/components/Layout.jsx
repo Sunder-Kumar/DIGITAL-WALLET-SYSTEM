@@ -72,6 +72,13 @@ const Layout = ({ children }) => {
     { path: '/profile', label: 'Profile', icon: '👤' }
   ];
 
+  const mobileNavLinks = [
+    { path: '/dashboard', icon: '🏠' },
+    { path: '/transactions', icon: '📊' },
+    { path: '/contacts', icon: '👥' },
+    { path: '/insights', icon: '💡' }
+  ];
+
   return (
     <div className="app-shell">
       {/* Mobile Top Header (Fintech Style) */}
@@ -176,7 +183,7 @@ const Layout = ({ children }) => {
 
       {/* Mobile Bottom Nav */}
       <nav className="bottom-nav" style={{ height: '70px' }}>
-        {[...navLinks.slice(0, 2), { path: '/contacts', label: 'Sync', icon: '👥' }, ...navLinks.slice(2)].map(link => (
+        {mobileNavLinks.map(link => (
           <Link key={link.path} to={link.path} className={`nav-item ${isActive(link.path)}`} style={{ padding: '10px 0' }}>
             <span className="nav-icon" style={{ fontSize: '28px' }}>{link.icon}</span>
           </Link>
