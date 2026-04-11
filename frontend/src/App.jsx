@@ -32,11 +32,17 @@ import NotificationListener from './components/NotificationListener';
 import CookieBanner from './components/CookieBanner';
 
 function App() {
-  const isAuthenticated = !!localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const isAdmin = user.role === 'admin';
+  const ProtectedRoute = ({ children }) => {
+    const isAuthenticated = !!localStorage.getItem('token');
+    if (!isAuthenticated) return <Navigate to="/login" />;
+    return children;
+  };
 
   const AdminRoute = ({ children }) => {
+    const isAuthenticated = !!localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdmin = user.role === 'admin';
+
     if (!isAuthenticated) return <Navigate to="/login" />;
     if (!isAdmin) return <Navigate to="/dashboard" />;
     return children;
@@ -53,29 +59,29 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
-          <Route path="/legal" element={isAuthenticated ? <Legal /> : <Navigate to="/login" />} />
+          <Route path="/legal" element={<ProtectedRoute><Legal /></ProtectedRoute>} />
           <Route path="/cookie-settings" element={<CookieSettings />} />
           
-          <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
-          <Route path="/transactions" element={isAuthenticated ? <Transactions /> : <Navigate to="/login" />} />
-          <Route path="/scan" element={isAuthenticated ? <Scan /> : <Navigate to="/login" />} />
-          <Route path="/insights" element={isAuthenticated ? <Insights /> : <Navigate to="/login" />} />
-          <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
-          <Route path="/contacts" element={isAuthenticated ? <Contacts /> : <Navigate to="/login" />} />
-          <Route path="/send" element={isAuthenticated ? <SendMoney /> : <Navigate to="/login" />} />
-          <Route path="/add-money" element={isAuthenticated ? <AddMoney /> : <Navigate to="/login" />} />
-          <Route path="/request" element={isAuthenticated ? <RequestMoney /> : <Navigate to="/login" />} />
-          <Route path="/withdraw" element={isAuthenticated ? <Withdraw /> : <Navigate to="/login" />} />
-          <Route path="/transfer-to-card" element={isAuthenticated ? <TransferToCard /> : <Navigate to="/login" />} />
-          <Route path="/bills" element={isAuthenticated ? <Bills /> : <Navigate to="/login" />} />
-          <Route path="/topup" element={isAuthenticated ? <MobileTopup /> : <Navigate to="/login" />} />
-          <Route path="/kyc" element={isAuthenticated ? <KYC /> : <Navigate to="/login" />} />
-          <Route path="/security" element={isAuthenticated ? <Security /> : <Navigate to="/login" />} />
-          <Route path="/devices" element={isAuthenticated ? <Devices /> : <Navigate to="/login" />} />
-          <Route path="/cards" element={isAuthenticated ? <ConnectedCards /> : <Navigate to="/login" />} />
-          <Route path="/statements" element={isAuthenticated ? <Statements /> : <Navigate to="/login" />} />
-          <Route path="/cards/add" element={isAuthenticated ? <AddCard /> : <Navigate to="/login" />} />
-          <Route path="/banks/link" element={isAuthenticated ? <LinkBank /> : <Navigate to="/login" />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+          <Route path="/scan" element={<ProtectedRoute><Scan /></ProtectedRoute>} />
+          <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
+          <Route path="/send" element={<ProtectedRoute><SendMoney /></ProtectedRoute>} />
+          <Route path="/add-money" element={<ProtectedRoute><AddMoney /></ProtectedRoute>} />
+          <Route path="/request" element={<ProtectedRoute><RequestMoney /></ProtectedRoute>} />
+          <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
+          <Route path="/transfer-to-card" element={<ProtectedRoute><TransferToCard /></ProtectedRoute>} />
+          <Route path="/bills" element={<ProtectedRoute><Bills /></ProtectedRoute>} />
+          <Route path="/topup" element={<ProtectedRoute><MobileTopup /></ProtectedRoute>} />
+          <Route path="/kyc" element={<ProtectedRoute><KYC /></ProtectedRoute>} />
+          <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
+          <Route path="/devices" element={<ProtectedRoute><Devices /></ProtectedRoute>} />
+          <Route path="/cards" element={<ProtectedRoute><ConnectedCards /></ProtectedRoute>} />
+          <Route path="/statements" element={<ProtectedRoute><Statements /></ProtectedRoute>} />
+          <Route path="/cards/add" element={<ProtectedRoute><AddCard /></ProtectedRoute>} />
+          <Route path="/banks/link" element={<ProtectedRoute><LinkBank /></ProtectedRoute>} />
           
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           

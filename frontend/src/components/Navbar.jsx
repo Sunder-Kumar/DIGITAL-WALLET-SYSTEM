@@ -10,6 +10,9 @@ const Navbar = () => {
         navigate('/login');
     };
 
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdmin = user.role === 'admin';
+
     if (!token) return null;
 
     return (
@@ -17,7 +20,7 @@ const Navbar = () => {
             <h1 style={{ margin: 0 }}>SecureWallet</h1>
             <div>
                 <Link to="/dashboard">Dashboard</Link>
-                {/* <Link to="/admin">Admin</Link> */}
+                {isAdmin && <Link to="/admin" style={{ marginLeft: '1rem' }}>Admin</Link>}
                 <button 
                     onClick={handleLogout} 
                     style={{ marginLeft: '1rem', background: 'transparent', border: '1px solid #ccc', color: '#333' }}
