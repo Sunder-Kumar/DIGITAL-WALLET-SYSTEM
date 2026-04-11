@@ -231,6 +231,41 @@ exports.getTransactions = async (req, res) => {
     }
 };
 
+exports.getContactTransactions = async (req, res) => {
+    const { contactId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const [wallet] = await db.query("SELECT wallet_id FROM Wallets WHERE user_id = ?", [userId]);
+        const [contactWallet] = await db.query("SELECT wallet_id FROM Wallets WHERE user_id = ?", [contactId]);
+        
+        if (wallet.length === 0 || contactWallet.length === 0) {
+            return res.json([]);
+        }
+
+        const walletId = wallet[0].wallet_id;
+        const targetWalletId = contactWallet[0].wallet_id;
+
+        const [rows] = await db.query(
+            `SELECT t.*, u_sender.name as sender_name, u_receiver.name as receiver_name
+             FROM Transactions t
+             LEFT JOIN Wallets w_sender ON t.sender_wallet_id = w_sender.wallet_id
+             LEFT JOIN Wallets w_receiver ON t.receiver_wallet_id = w_receiver.wallet_id
+             LEFT JOIN Users u_sender ON w_sender.user_id = u_sender.user_id
+             LEFT JOIN Users u_receiver ON w_receiver.user_id = u_receiver.user_id
+             WHERE (t.sender_wallet_id = ? AND t.receiver_wallet_id = ?)
+                OR (t.sender_wallet_id = ? AND t.receiver_wallet_id = ?)
+             ORDER BY t.timestamp ASC`,
+             [walletId, targetWalletId, targetWalletId, walletId]
+        );
+
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
 exports.getAdminStats = async (req, res) => {
     try {
         const [userCount] = await db.query("SELECT COUNT(*) as count FROM Users");

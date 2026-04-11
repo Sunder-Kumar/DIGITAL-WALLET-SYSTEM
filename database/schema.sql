@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS Transactions (
     sender_wallet_id INT,
     receiver_wallet_id INT,
     amount DECIMAL(19, 4) NOT NULL,
+    fee DECIMAL(19, 4) DEFAULT 0.0000,
     transaction_type ENUM('transfer', 'deposit', 'withdrawal', 'payment') NOT NULL,
     status ENUM('pending', 'completed', 'failed', 'flagged', 'blocked') DEFAULT 'pending',
     fraud_score FLOAT DEFAULT 0.0,

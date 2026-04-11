@@ -125,12 +125,38 @@ const Contacts = () => {
         localStorage.setItem(`chat_${chatUser.user_id}_messages`, JSON.stringify(updatedMessages));
     };
 
-    const openChat = (user) => {
+    const openChat = async (user) => {
         const savedMessages = JSON.parse(localStorage.getItem(`chat_${user.user_id}_messages`) || '[]');
+        
+        // Fetch transactions between current user and this contact
+        let transactions = [];
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const res = await axios.get(`${API_URL}/api/transactions/contact/${user.user_id}`, config);
+            transactions = res.data.map(t => ({
+                id: `txn_${t.transaction_id}`,
+                txnData: t,
+                sender: t.sender_wallet_id === storedUser.wallet_id ? 'me' : 'them',
+                type: 'transaction',
+                timestamp: new Date(t.timestamp),
+                time: new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }));
+        } catch (err) {
+            console.error("Failed to fetch contact transactions", err);
+        }
+
+        const chatMessages = savedMessages.map(m => ({
+            ...m,
+            timestamp: m.id ? new Date(m.id) : new Date() // Fallback for old messages
+        }));
+
+        // Merge and sort by time
+        const allMessages = [...chatMessages, ...transactions].sort((a, b) => a.timestamp - b.timestamp);
+
         setSelectedChat({
             ...user,
-            messages: savedMessages.length > 0 ? savedMessages : [
-                { id: 1, text: `Hello! I'm using SecureWallet.`, sender: 'them', time: 'Yesterday', type: 'text' }
+            messages: allMessages.length > 0 ? allMessages : [
+                { id: 1, text: `Hello! I'm using SecureWallet.`, sender: 'them', time: 'Yesterday', type: 'text', timestamp: new Date() }
             ]
         });
         
@@ -368,6 +394,80 @@ const Contacts = () => {
         </div>
     );
 
+    const [expandedTxn, setExpandedTxn] = useState(null);
+
+    const TransactionBubble = ({ msg }) => {
+        const isMe = msg.sender === 'me';
+        const txn = msg.txnData;
+        const isExpanded = expandedTxn === msg.id;
+
+        return (
+            <div style={{ alignSelf: 'center', width: '100%', maxWidth: '320px', margin: '10px 0' }}>
+                <div 
+                    onClick={() => setExpandedTxn(isExpanded ? null : msg.id)}
+                    style={{ 
+                        background: 'var(--bg-card)', 
+                        borderRadius: '20px', 
+                        padding: '15px', 
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+                        border: '1px solid var(--border-light)',
+                        cursor: 'pointer'
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ 
+                            width: '35px', height: '35px', borderRadius: '50%', 
+                            background: isMe ? '#fee2e2' : '#dcfce7',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '18px'
+                        }}>
+                            {isMe ? '↗️' : '↙️'}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                                {isMe ? `YOU SENT ${selectedChat.name}` : `${selectedChat.name} SENT YOU`}
+                            </div>
+                            <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
+                                Rs. {parseFloat(txn.amount).toLocaleString()}
+                            </div>
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{msg.time}</div>
+                    </div>
+
+                    {isExpanded && (
+                        <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px dashed var(--border)', fontSize: '12px', animation: 'fadeIn 0.3s' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>Transaction ID</span>
+                                <span style={{ fontWeight: '700' }}>{txn.reference_id || `SW${txn.transaction_id}`}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>Amount</span>
+                                <span style={{ fontWeight: '700' }}>Rs. {parseFloat(txn.amount).toFixed(2)}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>Fee</span>
+                                <span style={{ fontWeight: '700' }}>Rs. {parseFloat(txn.fee || 0).toFixed(2)}</span>
+                            </div>
+                            {txn.note && (
+                                <div style={{ marginBottom: '15px' }}>
+                                    <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Comments</span>
+                                    <div style={{ background: 'var(--bg-input)', padding: '8px 12px', borderRadius: '10px', fontStyle: 'italic' }}>"{txn.note}"</div>
+                                </div>
+                            )}
+                            <button 
+                                className="btn btn-primary" 
+                                style={{ width: '100%', height: '35px', fontSize: '12px', borderRadius: '10px' }}
+                                onClick={(e) => { e.stopPropagation(); navigate('/statements'); }}
+                            >
+                                Get Receipt
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     const renderChatWindow = () => {
         if (!selectedChat) {
             return (
@@ -378,6 +478,19 @@ const Contacts = () => {
                 </div>
             );
         }
+
+        // Group messages by date
+        const groupedMessages = [];
+        let currentDate = null;
+
+        selectedChat.messages.forEach(msg => {
+            const date = new Date(msg.timestamp).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+            if (date !== currentDate) {
+                groupedMessages.push({ type: 'date', date, id: `date_${msg.timestamp}` });
+                currentDate = date;
+            }
+            groupedMessages.push(msg);
+        });
 
         return (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-app)', position: 'relative' }}>
@@ -395,32 +508,46 @@ const Contacts = () => {
 
                 {/* Messages Area */}
                 <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    {selectedChat.messages.map(msg => (
-                        <div key={msg.id} style={{ alignSelf: msg.sender === 'me' ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
-                            <div style={{ 
-                                padding: '12px 16px', 
-                                borderRadius: msg.sender === 'me' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                                background: msg.sender === 'me' ? 'var(--primary)' : 'var(--bg-card)',
-                                color: msg.sender === 'me' ? 'white' : 'var(--text-main)',
-                                fontSize: '14px',
-                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-                            }}>
-                                {msg.type === 'text' && msg.text}
-                                {msg.type === 'audio' && <audio controls src={msg.fileUrl} style={{ maxWidth: '200px', height: '35px' }} />}
-                                {msg.type === 'image' && <img src={msg.fileUrl} alt="Sent" style={{ maxWidth: '100%', borderRadius: '12px', cursor: 'pointer' }} onClick={() => window.open(msg.fileUrl)} />}
-                                {msg.type === 'location' && msg.location && (
-                                    <div onClick={() => window.open(`https://www.google.com/maps?q=${msg.location.lat},${msg.location.lng}`)} style={{ cursor: 'pointer' }}>
-                                        <div style={{ fontSize: '18px', marginBottom: '5px' }}>📍 Location Shared</div>
-                                        <div style={{ fontSize: '11px', opacity: 0.8 }}>Click to view on Google Maps</div>
-                                    </div>
-                                )}
-                                {msg.type === 'file' && <div onClick={() => window.open(msg.fileUrl)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ fontSize: '20px' }}>📁</span><span>Document</span></div>}
+                    {groupedMessages.map(msg => {
+                        if (msg.type === 'date') {
+                            return (
+                                <div key={msg.id} style={{ alignSelf: 'center', margin: '20px 0', background: 'var(--bg-input)', padding: '4px 15px', borderRadius: '15px', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>
+                                    {msg.date}
+                                </div>
+                            );
+                        }
+
+                        if (msg.type === 'transaction') {
+                            return <TransactionBubble key={msg.id} msg={msg} />;
+                        }
+
+                        return (
+                            <div key={msg.id} style={{ alignSelf: msg.sender === 'me' ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
+                                <div style={{ 
+                                    padding: '12px 16px', 
+                                    borderRadius: msg.sender === 'me' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                                    background: msg.sender === 'me' ? 'var(--primary)' : 'var(--bg-card)',
+                                    color: msg.sender === 'me' ? 'white' : 'var(--text-main)',
+                                    fontSize: '14px',
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+                                }}>
+                                    {msg.type === 'text' && msg.text}
+                                    {msg.type === 'audio' && <audio controls src={msg.fileUrl} style={{ maxWidth: '200px', height: '35px' }} />}
+                                    {msg.type === 'image' && <img src={msg.fileUrl} alt="Sent" style={{ maxWidth: '100%', borderRadius: '12px', cursor: 'pointer' }} onClick={() => window.open(msg.fileUrl)} />}
+                                    {msg.type === 'location' && msg.location && (
+                                        <div onClick={() => window.open(`https://www.google.com/maps?q=${msg.location.lat},${msg.location.lng}`)} style={{ cursor: 'pointer' }}>
+                                            <div style={{ fontSize: '18px', marginBottom: '5px' }}>📍 Location Shared</div>
+                                            <div style={{ fontSize: '11px', opacity: 0.8 }}>Click to view on Google Maps</div>
+                                        </div>
+                                    )}
+                                    {msg.type === 'file' && <div onClick={() => window.open(msg.fileUrl)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ fontSize: '20px' }}>📁</span><span>Document</span></div>}
+                                </div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', textAlign: msg.sender === 'me' ? 'right' : 'left' }}>
+                                    {msg.time}
+                                </div>
                             </div>
-                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', textAlign: msg.sender === 'me' ? 'right' : 'left' }}>
-                                {msg.time}
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* Chat Input Bar */}
