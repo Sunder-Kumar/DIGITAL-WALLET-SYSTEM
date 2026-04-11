@@ -130,7 +130,11 @@ exports.getAllUsers = async (req, res) => {
         res.json(users);
     } catch (error) {
         console.error("[BACKEND ERROR] getAllUsers failed:", error.message);
-        res.status(500).json({ message: "Failed to fetch users", error: error.message });
+        res.status(500).json({ 
+            message: "Failed to fetch users", 
+            error: error.message,
+            sqlMessage: error.sqlMessage // This will show the exact missing column name
+        });
     }
 };
 

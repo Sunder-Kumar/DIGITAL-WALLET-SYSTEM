@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS Users (
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('user', 'admin') DEFAULT 'user',
     kyc_status ENUM('pending', 'verified', 'rejected', 'unverified') DEFAULT 'unverified',
+    kyc_documents TEXT, -- JSON string of document URLs
     mfa_enabled TINYINT(1) DEFAULT 0,
     mfa_secret VARCHAR(255), -- Encrypted TOTP Secret
     transaction_pin VARCHAR(255), -- Hashed 4-digit PIN
