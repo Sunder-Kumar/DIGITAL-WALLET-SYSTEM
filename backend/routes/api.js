@@ -50,6 +50,7 @@ router.get('/analytics/insights', verifyToken, analyticsController.getSpendingIn
 router.post('/transaction/send', verifyToken, transactionController.sendMoney);
 router.post('/transaction/pay-bill', verifyToken, transactionController.payBill);
 router.get('/transactions', verifyToken, transactionController.getTransactions);
+router.get('/transactions/:txnId', verifyToken, transactionController.getTransactionById);
 router.get('/transactions/contact/:contactId', verifyToken, transactionController.getContactTransactions);
 router.get('/transactions/statement', verifyToken, transactionController.getMonthlyStatement);
 

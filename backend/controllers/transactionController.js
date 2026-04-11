@@ -231,6 +231,38 @@ exports.getTransactions = async (req, res) => {
     }
 };
 
+exports.getTransactionById = async (req, res) => {
+    const { txnId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const [wallet] = await db.query("SELECT wallet_id FROM Wallets WHERE user_id = ?", [userId]);
+        if (wallet.length === 0) return res.status(404).json({ message: "Wallet not found" });
+        const walletId = wallet[0].wallet_id;
+
+        const [rows] = await db.query(
+            `SELECT t.*, 
+                    u_sender.name as sender_name, u_sender.email as sender_email,
+                    u_receiver.name as receiver_name, u_receiver.email as receiver_email
+             FROM Transactions t
+             LEFT JOIN Wallets w_sender ON t.sender_wallet_id = w_sender.wallet_id
+             LEFT JOIN Wallets w_receiver ON t.receiver_wallet_id = w_receiver.wallet_id
+             LEFT JOIN Users u_sender ON w_sender.user_id = u_sender.user_id
+             LEFT JOIN Users u_receiver ON w_receiver.user_id = u_receiver.user_id
+             WHERE (t.sender_wallet_id = ? OR t.receiver_wallet_id = ?)
+             AND t.transaction_id = ?`,
+             [walletId, walletId, txnId]
+        );
+
+        if (rows.length === 0) return res.status(404).json({ message: "Transaction not found" });
+
+        res.json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
 exports.getContactTransactions = async (req, res) => {
     const { contactId } = req.params;
     const userId = req.user.id;

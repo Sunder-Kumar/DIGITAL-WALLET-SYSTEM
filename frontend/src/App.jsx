@@ -22,6 +22,7 @@ import KYC from './pages/KYC';
 import Security from './pages/Security';
 import ConnectedCards from './pages/ConnectedCards';
 import Statements from './pages/Statements';
+import Receipt from './pages/Receipt';
 import AddCard from './pages/AddCard';
 import LinkBank from './pages/LinkBank';
 import Admin from './pages/Admin';
@@ -80,6 +81,7 @@ function App() {
           <Route path="/devices" element={<ProtectedRoute><Devices /></ProtectedRoute>} />
           <Route path="/cards" element={<ProtectedRoute><ConnectedCards /></ProtectedRoute>} />
           <Route path="/statements" element={<ProtectedRoute><Statements /></ProtectedRoute>} />
+          <Route path="/receipt/:txnId" element={<ProtectedRoute><Receipt /></ProtectedRoute>} />
           <Route path="/cards/add" element={<ProtectedRoute><AddCard /></ProtectedRoute>} />
           <Route path="/banks/link" element={<ProtectedRoute><LinkBank /></ProtectedRoute>} />
           

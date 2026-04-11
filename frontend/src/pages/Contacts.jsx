@@ -457,7 +457,7 @@ const Contacts = () => {
                             <button 
                                 className="btn btn-primary" 
                                 style={{ width: '100%', height: '35px', fontSize: '12px', borderRadius: '10px' }}
-                                onClick={(e) => { e.stopPropagation(); navigate('/statements'); }}
+                                onClick={(e) => { e.stopPropagation(); navigate(`/receipt/${txn.transaction_id}`); }}
                             >
                                 Get Receipt
                             </button>
