@@ -16,12 +16,13 @@ const Admin = () => {
 
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
     useEffect(() => {
         fetchData();
 
         // Pillar 3: Real-time Admin Monitoring
-        const socket = io((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '');
+        const socket = io(API_URL);
         socket.emit('join_admin_monitor');
 
         socket.on('NEW_FRAUD_ALERT', (alert) => {
@@ -39,23 +40,29 @@ const Admin = () => {
     const fetchData = async () => {
         try {
             const [statsRes, flaggedRes, usersRes] = await Promise.all([
-                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/admin/stats', config),
-                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/admin/flagged', config),
-                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/admin/users', config)
+                axios.get(`${API_URL}/api/admin/stats`, config),
+                axios.get(`${API_URL}/api/admin/flagged`, config),
+                axios.get(`${API_URL}/api/admin/users`, config)
             ]);
             setStats(statsRes.data);
             setFlaggedTxns(flaggedRes.data);
             setUsers(usersRes.data);
-        } catch (err) { console.error(err); }
+        } catch (err) { 
+            console.error("Admin Data Fetch Error:", err);
+            toast.error("Failed to fetch admin data. Please check your connection or role permissions.");
+        }
         finally { setLoading(false); }
     };
 
     const handleKYC = async (userId, status) => {
         try {
-            await axios.post((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/admin/kyc/update', { userId, status }, config);
+            await axios.post(`${API_URL}/api/admin/kyc/update`, { userId, status }, config);
             fetchData();
             toast.success(`User ${status === 'verified' ? 'Approved' : 'Rejected'}`);
-        } catch (err) { alert("Action failed"); }
+        } catch (err) { 
+            console.error("KYC Update Error:", err);
+            toast.error("Action failed"); 
+        }
     };
 
     // Visualization Data
