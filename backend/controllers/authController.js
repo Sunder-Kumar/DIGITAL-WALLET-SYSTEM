@@ -116,13 +116,21 @@ exports.submitKYC = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
     try {
         const [users] = await db.query(`
-            SELECT u.user_id, u.name, u.email, u.role, u.kyc_status, u.kyc_documents, w.balance 
+            SELECT 
+                u.user_id, 
+                u.name, 
+                u.email, 
+                u.role, 
+                u.kyc_status, 
+                u.kyc_documents, 
+                COALESCE(w.balance, 0) as balance
             FROM Users u 
             LEFT JOIN Wallets w ON u.user_id = w.user_id
         `);
         res.json(users);
     } catch (error) {
-        res.status(500).json({ message: "Failed to fetch users" });
+        console.error("[BACKEND ERROR] getAllUsers failed:", error.message);
+        res.status(500).json({ message: "Failed to fetch users", error: error.message });
     }
 };
 

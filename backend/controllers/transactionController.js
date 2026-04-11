@@ -243,7 +243,8 @@ exports.getAdminStats = async (req, res) => {
             flagged: flaggedCount[0].count
         });
     } catch (error) {
-        res.status(500).json({ message: "Server error" });
+        console.error("[BACKEND ERROR] getAdminStats failed:", error.message);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 
@@ -361,7 +362,8 @@ exports.getFlaggedTransactions = async (req, res) => {
         );
         res.json(transactions);
     } catch (error) {
-        res.status(500).json({ message: "Server error" });
+        console.error("[BACKEND ERROR] getFlaggedTransactions failed:", error.message);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 

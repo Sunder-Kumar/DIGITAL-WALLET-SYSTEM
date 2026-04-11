@@ -22,9 +22,11 @@ const verifyToken = (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
+    console.log(`[ADMIN AUTH DEBUG] User ID: ${req.user?.id}, Role: ${req.user?.role}`);
     if (req.user && req.user.role === 'admin') {
         next();
     } else {
+        console.warn(`[ADMIN AUTH DENIED] Access denied for role: ${req.user?.role}`);
         res.status(403).json({ message: "Forbidden: Admin access required" });
     }
 };
