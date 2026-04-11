@@ -56,8 +56,18 @@ const Scan = () => {
 
         html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess)
             .catch(err => {
-                setError("Camera access denied or not found.");
-                console.error(err);
+                const msg = err?.message || err;
+                console.error("Camera Init Error:", msg);
+                
+                if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                    setError("Camera requires HTTPS connection to work on mobile devices.");
+                } else if (msg.includes("NotAllowedError")) {
+                    setError("Camera access was denied. Please check your browser permissions.");
+                } else if (msg.includes("NotFoundError")) {
+                    setError("No camera found on this device.");
+                } else {
+                    setError("Failed to access camera. Please refresh and try again.");
+                }
             });
 
         return () => {
@@ -67,11 +77,15 @@ const Scan = () => {
         };
     }, [navigate]);
 
+    const handleRetry = () => {
+        window.location.reload();
+    };
+
     return (
         <div style={{ height: '100vh', background: '#000', position: 'relative', overflow: 'hidden' }}>
             {/* Header Overlays */}
             <div style={{ position: 'absolute', top: '40px', left: '20px', right: '20px', display: 'flex', justifyContent: 'space-between', color: 'white', zIndex: 10 }}>
-                <button onClick={() => navigate(-1)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', width: '40px', height: '40px', borderRadius: '50%', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+                <button onClick={() => navigate(-1)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', width: '40px', height: '40px', borderRadius: '50%', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                 <h3 style={{ margin: 0, fontWeight: '800' }}>Scan to Pay</h3>
                 <div style={{ width: 40 }}></div>
             </div>
@@ -80,39 +94,45 @@ const Scan = () => {
             <div id="reader" style={{ width: '100%', height: '100%' }}></div>
 
             {/* Focus Blur Overlays (4-Panel System for clean clear hole) */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'calc(50% - 130px)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 4 }}></div>
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 'calc(50% - 130px)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 4 }}></div>
-            <div style={{ position: 'absolute', top: 'calc(50% - 130px)', bottom: 'calc(50% - 130px)', left: 0, width: 'calc(50% - 130px)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 4 }}></div>
-            <div style={{ position: 'absolute', top: 'calc(50% - 130px)', bottom: 'calc(50% - 130px)', right: 0, width: 'calc(50% - 130px)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 4 }}></div>
+            {!error && (
+                <>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'calc(50% - 130px)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 4 }}></div>
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 'calc(50% - 130px)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 4 }}></div>
+                    <div style={{ position: 'absolute', top: 'calc(50% - 130px)', bottom: 'calc(50% - 130px)', left: 0, width: 'calc(50% - 130px)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 4 }}></div>
+                    <div style={{ position: 'absolute', top: 'calc(50% - 130px)', bottom: 'calc(50% - 130px)', right: 0, width: 'calc(50% - 130px)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 4 }}></div>
+                </>
+            )}
 
             {/* Custom Scanner Overlay (Fintech Style) */}
-            <div style={{ 
-                position: 'absolute', 
-                top: '50%', 
-                left: '50%', 
-                transform: 'translate(-50%, -50%)', 
-                width: '260px', 
-                height: '260px', 
-                pointerEvents: 'none',
-                zIndex: 5
-            }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '40px', height: '40px', borderTop: '4px solid var(--primary)', borderLeft: '4px solid var(--primary)', borderRadius: '15px 0 0 0' }}></div>
-                <div style={{ position: 'absolute', top: 0, right: 0, width: '40px', height: '40px', borderTop: '4px solid var(--primary)', borderRight: '4px solid var(--primary)', borderRadius: '0 15px 0 0' }}></div>
-                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '40px', height: '40px', borderBottom: '4px solid var(--primary)', borderLeft: '4px solid var(--primary)', borderRadius: '0 0 0 15px' }}></div>
-                <div style={{ position: 'absolute', bottom: 0, right: 0, width: '40px', height: '40px', borderBottom: '4px solid var(--primary)', borderRight: '4px solid var(--primary)', borderRadius: '0 0 15px 0' }}></div>
-                
-                {/* Animated Scanning Line */}
+            {!error && (
                 <div style={{ 
                     position: 'absolute', 
-                    top: '0', 
-                    left: '5%', 
-                    width: '90%', 
-                    height: '2px', 
-                    background: 'var(--primary)', 
-                    boxShadow: '0 0 15px var(--primary)',
-                    animation: 'scan-line 2s infinite linear'
-                }}></div>
-            </div>
+                    top: '50%', 
+                    left: '50%', 
+                    transform: 'translate(-50%, -50%)', 
+                    width: '260px', 
+                    height: '260px', 
+                    pointerEvents: 'none',
+                    zIndex: 5
+                }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '40px', height: '40px', borderTop: '4px solid var(--primary)', borderLeft: '4px solid var(--primary)', borderRadius: '15px 0 0 0' }}></div>
+                    <div style={{ position: 'absolute', top: 0, right: 0, width: '40px', height: '40px', borderTop: '4px solid var(--primary)', borderRight: '4px solid var(--primary)', borderRadius: '0 15px 0 0' }}></div>
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, width: '40px', height: '40px', borderBottom: '4px solid var(--primary)', borderLeft: '4px solid var(--primary)', borderRadius: '0 0 0 15px' }}></div>
+                    <div style={{ position: 'absolute', bottom: 0, right: 0, width: '40px', height: '40px', borderBottom: '4px solid var(--primary)', borderRight: '4px solid var(--primary)', borderRadius: '0 0 15px 0' }}></div>
+                    
+                    {/* Animated Scanning Line */}
+                    <div style={{ 
+                        position: 'absolute', 
+                        top: '0', 
+                        left: '5%', 
+                        width: '90%', 
+                        height: '2px', 
+                        background: 'var(--primary)', 
+                        boxShadow: '0 0 15px var(--primary)',
+                        animation: 'scan-line 2s infinite linear'
+                    }}></div>
+                </div>
+            )}
 
             <style>{`
                 @keyframes scan-line {
@@ -141,7 +161,16 @@ const Scan = () => {
                 background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)'
             }}>
                 {error ? (
-                    <p style={{ color: '#ff4444', fontWeight: '700', marginBottom: '20px' }}>{error}</p>
+                    <div style={{ marginBottom: '20px' }}>
+                        <p style={{ color: '#ff4444', fontWeight: '700', margin: '0 0 15px 0' }}>{error}</p>
+                        <button 
+                            className="btn" 
+                            style={{ background: 'var(--primary)', color: 'white', width: 'auto', padding: '10px 30px', margin: '0 auto' }}
+                            onClick={handleRetry}
+                        >
+                            Retry Camera
+                        </button>
+                    </div>
                 ) : (
                     <p style={{ opacity: 0.8, fontSize: '14px', marginBottom: '20px' }}>Center the QR code within the frame</p>
                 )}
