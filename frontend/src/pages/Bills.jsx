@@ -21,7 +21,7 @@ const Bills = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/transaction/pay-bill', {
+            await axios.post((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/transaction/pay-bill', {
                 biller_name: selectedBiller,
                 amount: parseFloat(amount),
                 category: selectedCategory || 'Other'
@@ -76,7 +76,7 @@ const Bills = () => {
                 </div>
 
                 <button className="btn btn-primary" style={{ width: '100%', marginTop: '30px' }} onClick={handlePay} disabled={loading || !amount}>
-                    {loading ? 'Processing...' : `Pay $${amount || '0.00'}`}
+                    {loading ? 'Processing...' : `Pay Rs. ${amount || '0.00'}`}
                 </button>
             </div>
         </div>

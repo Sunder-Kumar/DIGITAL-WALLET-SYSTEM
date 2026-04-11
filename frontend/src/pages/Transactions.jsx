@@ -17,10 +17,10 @@ const Transactions = () => {
 
     const fetchData = async () => {
         try {
-            const walletRes = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet', config);
+            const walletRes = await axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet', config);
             setWalletId(walletRes.data.wallet_id);
             
-            const txnRes = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/transactions', config);
+            const txnRes = await axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/transactions', config);
             setTransactions(txnRes.data);
         } catch (err) {
             console.error(err);
@@ -69,7 +69,7 @@ const Transactions = () => {
                                     {txn.status === 'flagged' && <span style={{ color: 'orange', fontSize: '10px', display: 'block' }}>⚠️ FLAGGED</span>}
                                 </div>
                                 <div className="txn-amount" style={{ color: isSender ? 'var(--text-main)' : 'var(--secondary)' }}>
-                                    {isSender ? '-' : '+'}${parseFloat(txn.amount).toFixed(2)}
+                                    {isSender ? '-' : '+'}{`Rs. ${parseFloat(txn.amount).toFixed(2)}`}
                                 </div>
                             </div>
                         );

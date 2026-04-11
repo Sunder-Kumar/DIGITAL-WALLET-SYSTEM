@@ -13,7 +13,7 @@ const RequestMoney = () => {
 
     const handleShare = async () => {
         const shareUrl = `${window.location.origin}/send?email=${user.email}&amount=${amount || 0}`;
-        const shareText = `Hey! Send me $${amount || 0} on SecureWallet using this link: ${shareUrl}`;
+        const shareText = `Hey! Send me Rs. ${amount || 0} on SecureWallet using this link: ${shareUrl}`;
 
         if (navigator.share) {
             try {
@@ -51,7 +51,7 @@ const RequestMoney = () => {
             }}>
                 <small style={{ color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>I want to receive</small>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', marginTop: '15px' }}>
-                    <span style={{ fontSize: '30px', fontWeight: '800', color: 'var(--primary)', marginRight: '5px' }}>$</span>
+                    <span style={{ fontSize: '30px', fontWeight: '800', color: 'var(--primary)', marginRight: '5px' }}>Rs.</span>
                     <input 
                         className="input-field" 
                         type="number" 
@@ -83,7 +83,7 @@ const RequestMoney = () => {
                 </div>
                 <h4 style={{ marginTop: '25px', marginBottom: '8px', fontSize: '20px', fontWeight: '800' }}>{user.name}</h4>
                 <p style={{ fontSize: '14px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-                    Scan to pay me <strong>{amount ? `$${amount}` : 'any amount'}</strong> instantly on SecureWallet.
+                    Scan to pay me <strong>{amount ? `Rs. ${amount}` : 'any amount'}</strong> instantly on SecureWallet.
                 </p>
             </div>
 

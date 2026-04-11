@@ -20,7 +20,7 @@ const AddMoney = () => {
 
     const fetchBalance = async () => {
         try {
-            const res = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet', { headers });
+            const res = await axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet', { headers });
             setBalance(res.data.balance);
         } catch (err) { console.error(err); }
     };
@@ -28,8 +28,8 @@ const AddMoney = () => {
     const fetchMethods = async () => {
         try {
             const [cardsRes, banksRes] = await Promise.all([
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/cards', { headers }),
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/banks', { headers })
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet/cards', { headers }),
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet/banks', { headers })
             ]);
             
             const allMethods = [
@@ -46,7 +46,7 @@ const AddMoney = () => {
         if (!selectedMethod) return alert("Select a payment method");
         setLoading(true);
         try {
-            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/add-money', {
+            await axios.post((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet/add-money', {
                 amount: parseFloat(amount),
                 source_id: selectedMethod.id,
                 source_type: selectedMethod.label
@@ -76,8 +76,8 @@ const AddMoney = () => {
                 />
                 <div style={{ marginTop: '10px', fontSize: '13px', fontWeight: '700', color: 'var(--primary)', opacity: 0.8 }}>
                     {amount && !isNaN(amount) && parseFloat(amount) > 0 
-                        ? `New Balance: $${(parseFloat(balance) + parseFloat(amount)).toLocaleString(undefined, { minimumFractionDigits: 2 })}` 
-                        : `Current Balance: $${parseFloat(balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                        ? `New Balance: Rs. ${(parseFloat(balance) + parseFloat(amount)).toLocaleString(undefined, { minimumFractionDigits: 2 })}` 
+                        : `Current Balance: Rs. ${parseFloat(balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                 </div>
             </div>
 
@@ -109,7 +109,7 @@ const AddMoney = () => {
             </div>
 
             <button className="btn btn-primary" onClick={handleAdd} disabled={loading || !amount} style={{ width: '100%', marginTop: '20px' }}>
-                {loading ? 'Processing...' : `Add $${amount || '0.00'} Instantly`}
+                {loading ? 'Processing...' : `Add Rs. ${amount || '0.00'} Instantly`}
             </button>
         </div>
     );

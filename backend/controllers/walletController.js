@@ -67,7 +67,7 @@ exports.withdrawMoney = async (req, res) => {
 
         // 7. Notification
         const notifTitle = "Withdrawal Successful";
-        const notifMsg = `🏦 $${amount} transferred to your ${bank[0].bank_name} account.`;
+        const notifMsg = `🏦 Rs. ${amount} transferred to your ${bank[0].bank_name} account.`;
         await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [userId, notifTitle, notifMsg, txn.insertId]);
 
         if (global.io) {
@@ -141,7 +141,7 @@ exports.transferToCard = async (req, res) => {
 
         // 7. Notification
         const notifTitle = "Card Transfer Successful";
-        const notifMsg = `💳 $${amount} sent to your ${card[0].brand} card ending in ${card[0].last4}.`;
+        const notifMsg = `💳 Rs. ${amount} sent to your ${card[0].brand} card ending in ${card[0].last4}.`;
         await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [userId, notifTitle, notifMsg, txn.insertId]);
 
         if (global.io) {

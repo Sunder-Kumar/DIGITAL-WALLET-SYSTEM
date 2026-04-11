@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+import toast, { Toaster } from 'react-hot-toast';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -21,6 +22,7 @@ const Layout = ({ children }) => {
   const notifRef = useRef(null);
   const searchRef = useRef(null);
   const detailRef = useRef(null);
+  const socketRef = useRef(null);
   
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -46,23 +48,70 @@ const Layout = ({ children }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const [unreadCounts, setUnreadCounts] = useState(JSON.parse(localStorage.getItem('unreadMessages') || '{}'));
+  const [totalUnread, setTotalUnread] = useState(0);
+
+  useEffect(() => {
+    const counts = JSON.parse(localStorage.getItem('unreadMessages') || '{}');
+    const total = Object.values(counts).reduce((acc, curr) => acc + (curr || 0), 0);
+    setTotalUnread(total);
+  }, [unreadCounts]);
+
+  // Listen for storage changes to sync across tabs/components
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUnreadCounts(JSON.parse(localStorage.getItem('unreadMessages') || '{}'));
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Persistent Socket Connection
   useEffect(() => {
     if (!token) return;
-    fetchNotifications();
 
-    const socket = io((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '');
+    const socket = io((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '');
+    socketRef.current = socket;
     socket.emit('join_room', storedUser.id);
 
     socket.on('NOTIFICATION_RECEIVED', (data) => {
       setNotifications(prev => [data, ...prev]);
     });
 
+    socket.on('receive_message', (data) => {
+      // Check if we are currently in a chat with this person
+      const currentChatId = localStorage.getItem('activeChatUserId');
+      
+      // Get current path from a ref or variable that doesn't trigger re-connect
+      if (window.location.pathname !== '/contacts' || currentChatId !== String(data.senderId)) {
+        const counts = JSON.parse(localStorage.getItem('unreadMessages') || '{}');
+        counts[data.senderId] = (counts[data.senderId] || 0) + 1;
+        localStorage.setItem('unreadMessages', JSON.stringify(counts));
+        setUnreadCounts(counts);
+        
+        // Trigger event for same-tab components (like Contacts.jsx) to update
+        window.dispatchEvent(new Event('storage'));
+        
+        // Immediate visual feedback
+        toast.success(`Message from ${data.name}: ${data.text.substring(0, 30)}${data.text.length > 30 ? '...' : ''}`, {
+          position: 'top-right',
+          style: { borderRadius: '15px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--primary)' },
+          onClick: () => navigate('/contacts')
+        });
+      }
+    });
+
     return () => socket.disconnect();
+  }, [token]); // Only reconnect if token changes
+
+  useEffect(() => {
+    if (!token) return;
+    fetchNotifications();
   }, [token]);
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/notifications', {
+      const res = await axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/notifications', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(res.data);
@@ -71,7 +120,7 @@ const Layout = ({ children }) => {
 
   const handleClearNotifications = async () => {
     try {
-      await axios.delete((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/notifications', {
+      await axios.delete((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/notifications', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications([]);
@@ -84,7 +133,7 @@ const Layout = ({ children }) => {
     if (query.length > 1) {
       setIsSearching(true);
       try {
-        const res = await axios.get(`https://192.168.0.38:5000/api/users/search?query=${query}`, {
+        const res = await axios.get(`http://localhost:5000/api/users/search?query=${query}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSearchResults(res.data);
@@ -104,6 +153,7 @@ const Layout = ({ children }) => {
   const navLinks = [
     { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
     { path: '/transactions', label: 'History', icon: '📊' },
+    { path: '/contacts', label: 'Contacts', icon: '👥' },
     { path: '/scan', label: 'Scan', icon: '📷' },
     { path: '/insights', label: 'Summary', icon: '📈' },
     { path: '/profile', label: 'Profile', icon: '👤' }
@@ -217,7 +267,7 @@ const Layout = ({ children }) => {
               <p style={{ margin: 0, fontSize: '13px', opacity: 0.6 }}>SecureWallet Wallet</p>
               
               <h1 style={{ fontSize: '36px', margin: '30px 0 10px 0', fontWeight: '900' }}>
-                $ {parseFloat(selectedNotif.txn_amount || 0).toLocaleString()}
+                Rs. {parseFloat(selectedNotif.txn_amount || 0).toLocaleString()}
               </h1>
               <p style={{ fontSize: '13px', opacity: 0.6 }}>
                 {selectedNotif.created_at ? new Date(selectedNotif.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : selectedNotif.time}
@@ -226,15 +276,15 @@ const Layout = ({ children }) => {
               <div style={{ marginTop: '40px', borderTop: '1px solid var(--border)', paddingTop: '20px', textAlign: 'left' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
                   <span style={{ fontSize: '13px', opacity: 0.7 }}>Amount {selectedNotif.title.includes('Received') ? 'Received' : 'Sent'}</span>
-                  <span style={{ fontSize: '13px', fontWeight: '700' }}>$ {parseFloat(selectedNotif.txn_amount || 0).toLocaleString()}</span>
+                  <span style={{ fontSize: '13px', fontWeight: '700' }}>Rs. {parseFloat(selectedNotif.txn_amount || 0).toLocaleString()}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
                   <span style={{ fontSize: '13px', opacity: 0.7 }}>Service Fee (Incl. Tax)</span>
-                  <span style={{ fontSize: '13px', fontWeight: '700' }}>$ 0.00</span>
+                  <span style={{ fontSize: '13px', fontWeight: '700' }}>Rs. 0.00</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderTop: '1px solid var(--border)', paddingTop: '15px' }}>
                   <span style={{ fontSize: '14px', fontWeight: '800' }}>Total Amount</span>
-                  <span style={{ fontSize: '14px', fontWeight: '800' }}>$ {parseFloat(selectedNotif.txn_amount || 0).toLocaleString()}</span>
+                  <span style={{ fontSize: '14px', fontWeight: '800' }}>Rs. {parseFloat(selectedNotif.txn_amount || 0).toLocaleString()}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
                   <span style={{ fontSize: '13px', opacity: 0.7 }}>Transaction ID</span>
@@ -282,9 +332,27 @@ const Layout = ({ children }) => {
         <h2 style={{ marginBottom: '40px', color: 'var(--primary)' }}>SecureWallet</h2>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
           {navLinks.map(link => (
-            <Link key={link.path} to={link.path} className={`nav-link ${isActive(link.path)}`}>
+            <Link key={link.path} to={link.path} className={`nav-link ${isActive(link.path)}`} style={{ position: 'relative' }}>
               <span style={{ fontSize: '20px' }}>{link.icon}</span>
               <span>{link.label}</span>
+              {link.path === '/contacts' && totalUnread > 0 && (
+                <span style={{ 
+                  position: 'absolute', 
+                  right: '15px', 
+                  top: '50%', 
+                  transform: 'translateY(-50%)', 
+                  background: 'var(--danger)', 
+                  color: 'white', 
+                  fontSize: '10px', 
+                  fontWeight: '800', 
+                  padding: '2px 6px', 
+                  borderRadius: '10px',
+                  minWidth: '18px',
+                  textAlign: 'center'
+                }}>
+                  {totalUnread}
+                </span>
+              )}
             </Link>
           ))}
         </nav>
@@ -297,12 +365,32 @@ const Layout = ({ children }) => {
       <main className="main-content">
         {children}
       </main>
+      
+      <Toaster />
 
       {/* Mobile Bottom Nav */}
       <nav className="bottom-nav" style={{ height: '70px' }}>
         {mobileNavLinks.map(link => (
-          <Link key={link.path} to={link.path} className={`nav-item ${isActive(link.path)}`} style={{ padding: '10px 0' }}>
+          <Link key={link.path} to={link.path} className={`nav-item ${isActive(link.path)}`} style={{ padding: '10px 0', position: 'relative' }}>
             <span className="nav-icon" style={{ fontSize: '28px' }}>{link.icon}</span>
+            {link.path === '/contacts' && totalUnread > 0 && (
+              <span style={{ 
+                position: 'absolute', 
+                top: '10px', 
+                right: '25%', 
+                background: 'var(--danger)', 
+                color: 'white', 
+                fontSize: '10px', 
+                fontWeight: '800', 
+                padding: '2px 6px', 
+                borderRadius: '10px',
+                border: '2px solid var(--bg-card)',
+                minWidth: '18px',
+                textAlign: 'center'
+              }}>
+                {totalUnread}
+              </span>
+            )}
           </Link>
         ))}
       </nav>

@@ -97,15 +97,16 @@ exports.verify2FA = async (req, res) => {
 };
 
 exports.submitKYC = async (req, res) => {
-    const { id_type, id_number } = req.body;
+    const { id_type, id_number, selfie, cnic_front, cnic_back } = req.body;
+    const userId = req.user.id;
+
     try {
-        const encryptedID = encrypt(id_number);
+        const kycDocs = JSON.stringify({ id_type, id_number, selfie, cnic_front, cnic_back });
         await db.query(
-            "INSERT INTO KYC_Documents (user_id, id_type, id_number_encrypted) VALUES (?, ?, ?)",
-            [req.user.id, id_type, encryptedID]
+            "UPDATE Users SET kyc_status = 'pending', kyc_documents = ? WHERE user_id = ?",
+            [kycDocs, userId]
         );
-        await db.query("UPDATE Users SET kyc_status = 'pending' WHERE user_id = ?", [req.user.id]);
-        res.json({ message: "Documents submitted for review" });
+        res.json({ message: "KYC documents submitted for review" });
     } catch (error) {
         console.error("KYC Error:", error);
         res.status(500).json({ message: "KYC submission failed" });
@@ -115,7 +116,7 @@ exports.submitKYC = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
     try {
         const [users] = await db.query(`
-            SELECT u.user_id, u.name, u.email, u.role, u.kyc_status, w.balance 
+            SELECT u.user_id, u.name, u.email, u.role, u.kyc_status, u.kyc_documents, w.balance 
             FROM Users u 
             LEFT JOIN Wallets w ON u.user_id = w.user_id
         `);
@@ -132,6 +133,31 @@ exports.updateKYCStatus = async (req, res) => {
         res.json({ message: `User KYC updated to ${status}` });
     } catch (error) {
         res.status(500).json({ message: "Update failed" });
+    }
+};
+
+exports.updateProfile = async (req, res) => {
+    const { name, email } = req.body;
+    const userId = req.user.id;
+
+    if (!name || !email) {
+        return res.status(400).json({ message: "Name and email are required" });
+    }
+
+    try {
+        // Check if email is already taken by another user
+        const [existingUser] = await db.query("SELECT * FROM Users WHERE email = ? AND user_id != ?", [email, userId]);
+        if (existingUser.length > 0) {
+            return res.status(400).json({ message: "Email is already in use" });
+        }
+
+        await db.query("UPDATE Users SET name = ?, email = ? WHERE user_id = ?", [name, email, userId]);
+        
+        // Return updated info (excluding sensitive data)
+        res.json({ message: "Profile updated successfully", user: { id: userId, name, email } });
+    } catch (error) {
+        console.error("Update Profile Error:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 

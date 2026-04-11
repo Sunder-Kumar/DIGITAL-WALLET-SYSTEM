@@ -5,7 +5,6 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const fs = require('fs');
-const selfsigned = require('selfsigned');
 
 dotenv.config();
 
@@ -17,53 +16,32 @@ const apiRoutes = require('./routes/api');
 const app = express();
 
 // CORS Configuration
-const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : ["*"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000"
+];
+
 app.use(cors({
-  origin: allowedOrigins,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true
 }));
 
-// SSL Certificate Generation for local development
-let server;
-const certPath = './cert.pem';
-const keyPath = './key.pem';
-
-if (process.env.NODE_ENV !== 'production') {
-  let cert, key;
-  if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
-    console.log("Loading existing SSL certificates...");
-    cert = fs.readFileSync(certPath);
-    key = fs.readFileSync(keyPath);
-  } else {
-    console.log("Generating fresh SSL certificates for", '192.168.0.38', "...");
-    try {
-      const attrs = [{ name: 'commonName', value: '192.168.0.38' }];
-      const pems = selfsigned.generate(attrs, { days: 365 });
-      
-      cert = pems.cert;
-      key = pems.private;
-      
-      if (!cert || !key) throw new Error("SSL generation returned empty data");
-
-      fs.writeFileSync(certPath, cert);
-      fs.writeFileSync(keyPath, key);
-      console.log("✅ SSL certificates generated and saved successfully.");
-    } catch (e) {
-      console.error("❌ SSL Generation Error:", e.message);
-      console.warn("⚠️ Falling back to HTTP. Mobile camera will be disabled.");
-      server = http.createServer(app);
-    }
-  }
-  if (!server) server = https.createServer({ key, cert }, app);
-} else {
-  server = http.createServer(app);
-}
+// Server Instance Creation
+// Defaulting to HTTP for smooth local development
+const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST"]
+    origin: "*",
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    credentials: true
   }
 });
 
@@ -79,6 +57,15 @@ io.on('connection', (socket) => {
     console.log(`User ${userId} joined room`);
   });
 
+  // Handle Real-time Private Messaging
+  socket.on('private_message', (data) => {
+    const { recipientId } = data;
+    io.to(`user_${recipientId}`).emit('receive_message', {
+      ...data,
+      timestamp: new Date()
+    });
+  });
+
   // Pillar 3: Admin Global Monitor
   socket.on('join_admin_monitor', () => {
     socket.join('admin_alerts');
@@ -91,7 +78,10 @@ io.on('connection', (socket) => {
 });
 
 // Security Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(express.json());
 
 // Logging
@@ -100,7 +90,7 @@ app.use(morgan('combined'));
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 500, // Increased for development
+  max: 500,
   message: "Too many requests from this IP, please try again after 15 minutes"
 });
 app.use('/api', limiter);

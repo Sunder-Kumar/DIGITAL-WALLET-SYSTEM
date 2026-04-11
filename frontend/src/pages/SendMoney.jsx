@@ -51,9 +51,9 @@ const SendMoney = () => {
     const fetchData = async () => {
         try {
             const [walletRes, banksRes, cardsRes] = await Promise.all([
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet', config),
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/banks', config),
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/cards', config)
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet', config),
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet/banks', config),
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet/cards', config)
             ]);
             
             setBalance(parseFloat(walletRes.data.balance));
@@ -75,13 +75,13 @@ const SendMoney = () => {
             let payload = { amount: parseFloat(amount), pin };
 
             if (destinationType === 'contact') {
-                endpoint = (import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/transaction/send';
+                endpoint = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/transaction/send';
                 payload = { ...payload, receiver_email: receiverEmail, category, note };
             } else if (destinationType === 'bank') {
-                endpoint = (import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/withdraw';
+                endpoint = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet/withdraw';
                 payload = { ...payload, bank_id: selectedBank.bank_account_id };
             } else if (destinationType === 'card') {
-                endpoint = (import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/transfer-to-card';
+                endpoint = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet/transfer-to-card';
                 payload = { ...payload, card_id: selectedCard.card_id };
             }
 
@@ -110,7 +110,7 @@ const SendMoney = () => {
                 </div>
                 <h1 style={{ fontWeight: '800' }}>Transfer Successful!</h1>
                 <p style={{ color: 'var(--text-muted)', fontSize: '18px' }}>
-                    You moved <strong>${parseFloat(amount).toFixed(2)}</strong> to <strong>{getDestinationLabel()}</strong>
+                    You moved <strong>Rs. {parseFloat(amount).toFixed(2)}</strong> to <strong>{getDestinationLabel()}</strong>
                 </p>
                 <button className="btn btn-primary" onClick={() => navigate('/dashboard')} style={{ width: '100%', marginTop: '40px' }}>Done</button>
             </div>
@@ -123,7 +123,7 @@ const SendMoney = () => {
                 <form onSubmit={handleUnifiedTransfer} className="card" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', padding: '40px 20px' }}>
                     <h2 style={{ marginBottom: '10px' }}>Enter PIN</h2>
                     <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '30px' }}>
-                        Authorize transfer of <strong>${parseFloat(amount).toLocaleString()}</strong> to <strong>{getDestinationLabel()}</strong>
+                        Authorize transfer of <strong>Rs. {parseFloat(amount).toLocaleString()}</strong> to <strong>{getDestinationLabel()}</strong>
                     </p>
                     
                     <input 
@@ -238,7 +238,7 @@ const SendMoney = () => {
             {/* Amount Section */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                    <span style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-muted)' }}>$</span>
+                    <span style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-muted)' }}>Rs.</span>
                     <input 
                         type="number"
                         placeholder="0"
@@ -267,7 +267,7 @@ const SendMoney = () => {
                     marginTop: '15px'
                 }}>
                     {(balance - parseFloat(amount || 0)) < 0 ? '⚠️ OVERDRAFT ' : 'New Balance: '}
-                    ${(balance - parseFloat(amount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    Rs. {(balance - parseFloat(amount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </div>
             </div>
 

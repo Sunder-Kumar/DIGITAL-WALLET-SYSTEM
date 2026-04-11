@@ -21,7 +21,7 @@ const Admin = () => {
         fetchData();
 
         // Pillar 3: Real-time Admin Monitoring
-        const socket = io((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '');
+        const socket = io((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '');
         socket.emit('join_admin_monitor');
 
         socket.on('NEW_FRAUD_ALERT', (alert) => {
@@ -39,9 +39,9 @@ const Admin = () => {
     const fetchData = async () => {
         try {
             const [statsRes, flaggedRes, usersRes] = await Promise.all([
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/admin/stats', config),
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/admin/flagged', config),
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/admin/users', config)
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/admin/stats', config),
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/admin/flagged', config),
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/admin/users', config)
             ]);
             setStats(statsRes.data);
             setFlaggedTxns(flaggedRes.data);
@@ -52,7 +52,7 @@ const Admin = () => {
 
     const handleKYC = async (userId, status) => {
         try {
-            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/admin/kyc/update', { userId, status }, config);
+            await axios.post((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/admin/kyc/update', { userId, status }, config);
             fetchData();
             toast.success(`User ${status === 'verified' ? 'Approved' : 'Rejected'}`);
         } catch (err) { alert("Action failed"); }
@@ -132,7 +132,7 @@ const Admin = () => {
                                             <div style={{ fontWeight: '700', fontSize: '13px' }}>#{t.transaction_id} | {t.sender}</div>
                                             <small style={{ color: 'var(--danger)' }}>Score: {t.fraud_score.toFixed(2)}</small>
                                         </div>
-                                        <div style={{ fontWeight: '800' }}>${t.amount}</div>
+                                        <div style={{ fontWeight: '800' }}>Rs. {t.amount}</div>
                                     </div>
                                 ))}
                             </div>
@@ -164,7 +164,7 @@ const Admin = () => {
                                             {u.kyc_status.toUpperCase()}
                                         </span>
                                     </td>
-                                    <td style={{ padding: '15px', fontWeight: '700' }}>${parseFloat(u.balance).toFixed(2)}</td>
+                                    <td style={{ padding: '15px', fontWeight: '700' }}>Rs. {parseFloat(u.balance).toFixed(2)}</td>
                                     <td style={{ padding: '15px' }}>{u.role}</td>
                                 </tr>
                             ))}
@@ -174,18 +174,48 @@ const Admin = () => {
             )}
 
             {activeTab === 'kyc' && (
-                <div className="adaptive-grid">
-                    {users.filter(u => u.kyc_status === 'pending' || u.kyc_status === 'unverified').map(u => (
-                        <div key={u.user_id} className="card">
-                            <h4>Review Identity: {u.name}</h4>
-                            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>User requested verification for account access.</p>
-                            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                                <button className="btn" style={{ flex: 1, background: 'var(--secondary)', color: 'white' }} onClick={() => handleKYC(u.user_id, 'verified')}>Approve</button>
-                                <button className="btn" style={{ flex: 1, background: 'var(--danger)', color: 'white' }} onClick={() => handleKYC(u.user_id, 'rejected')}>Reject</button>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '25px' }}>
+                    {users.filter(u => u.kyc_status === 'pending').map(u => {
+                        const docs = u.kyc_documents ? JSON.parse(u.kyc_documents) : {};
+                        return (
+                            <div key={u.user_id} className="card" style={{ padding: '25px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+                                    <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: `url(${docs.selfie}) center/cover, var(--primary-light)` }}></div>
+                                    <div>
+                                        <h4 style={{ margin: 0 }}>{u.name}</h4>
+                                        <small style={{ color: 'var(--text-muted)' }}>{u.email}</small>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginBottom: '20px' }}>
+                                    <small style={{ display: 'block', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', fontSize: '10px' }}>ID: {docs.id_type?.toUpperCase()} - {docs.id_number}</small>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                        <div 
+                                            onClick={() => window.open(docs.cnic_front)}
+                                            style={{ height: '80px', borderRadius: '10px', background: `url(${docs.cnic_front}) center/cover`, border: '1px solid var(--border)', cursor: 'pointer' }}
+                                        ></div>
+                                        <div 
+                                            onClick={() => window.open(docs.cnic_back)}
+                                            style={{ height: '80px', borderRadius: '10px', background: `url(${docs.cnic_back}) center/cover`, border: '1px solid var(--border)', cursor: 'pointer' }}
+                                        ></div>
+                                    </div>
+                                    <p style={{ margin: '10px 0 0 0', fontSize: '11px', textAlign: 'center', color: 'var(--primary)', fontWeight: '700' }}>Click images to enlarge</p>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button className="btn" style={{ flex: 1, background: 'var(--secondary)', color: 'white', fontSize: '12px', height: '40px' }} onClick={() => handleKYC(u.user_id, 'verified')}>Approve</button>
+                                    <button className="btn" style={{ flex: 1, background: 'var(--danger)', color: 'white', fontSize: '12px', height: '40px' }} onClick={() => handleKYC(u.user_id, 'rejected')}>Reject</button>
+                                </div>
                             </div>
+                        );
+                    })}
+                    {users.filter(u => u.kyc_status === 'pending').length === 0 && (
+                        <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '50px' }}>
+                            <div style={{ fontSize: '40px', marginBottom: '15px' }}>✅</div>
+                            <h3 style={{ margin: 0 }}>All caught up!</h3>
+                            <p style={{ color: 'var(--text-muted)' }}>No pending identity verifications at the moment.</p>
                         </div>
-                    ))}
-                    {users.filter(u => u.kyc_status === 'pending').length === 0 && <p>No pending KYC applications.</p>}
+                    )}
                 </div>
             )}
         </div>

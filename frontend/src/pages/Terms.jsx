@@ -23,7 +23,7 @@ const Terms = () => {
                 <p>You agree not to use the service for any illegal activities, including money laundering, fraud, or the purchase of prohibited goods. We reserve the right to freeze accounts suspected of suspicious activity based on our AI Risk Engine.</p>
 
                 <h4 style={{ color: 'var(--text-main)', marginTop: '20px' }}>4. Transaction Limits</h4>
-                <p>Standard accounts are subject to daily transfer limits of $5,000. These limits may be adjusted based on account verification status and risk scoring.</p>
+                <p>Standard accounts are subject to daily transfer limits of Rs. 5,000. These limits may be adjusted based on account verification status and risk scoring.</p>
 
                 <h4 style={{ color: 'var(--text-main)', marginTop: '20px' }}>5. Limitation of Liability</h4>
                 <p>SecureWallet shall not be liable for any indirect, incidental, or consequential damages arising from the use of our digital wallet platform.</p>

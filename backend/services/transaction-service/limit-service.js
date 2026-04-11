@@ -10,7 +10,7 @@ class TransactionLimitService {
     const maxSingle = maxDaily * 0.4; // Default single transaction limit to 40% of daily limit
 
     if (amount > maxSingle) {
-      throw new Error(`Amount exceeds single transaction limit of $${maxSingle}`);
+      throw new Error(`Amount exceeds single transaction limit of Rs. ${maxSingle}`);
     }
 
     // Check Daily Total
@@ -26,7 +26,7 @@ class TransactionLimitService {
     const currentDailyTotal = result[0].daily_total || 0;
     
     if (parseFloat(currentDailyTotal) + parseFloat(amount) > maxDaily) {
-        throw new Error(`Transaction would exceed daily limit of $${maxDaily}. Used today: $${currentDailyTotal}`);
+        throw new Error(`Transaction would exceed daily limit of Rs. ${maxDaily}. Used today: Rs. ${currentDailyTotal}`);
     }
 
     return true;

@@ -11,6 +11,7 @@ const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.get('/profile', verifyToken, authController.getUserProfile);
+router.put('/profile', verifyToken, authController.updateProfile);
 router.get('/users/search', verifyToken, authController.searchUsers);
 
 // Notification Routes

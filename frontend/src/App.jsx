@@ -25,6 +25,8 @@ import Statements from './pages/Statements';
 import AddCard from './pages/AddCard';
 import LinkBank from './pages/LinkBank';
 import Admin from './pages/Admin';
+import MobileTopup from './pages/MobileTopup';
+import Devices from './pages/Devices';
 import Layout from './components/Layout';
 import NotificationListener from './components/NotificationListener';
 import CookieBanner from './components/CookieBanner';
@@ -41,7 +43,7 @@ function App() {
   };
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <NotificationListener />
       <CookieBanner />
       <Layout>
@@ -66,8 +68,10 @@ function App() {
           <Route path="/withdraw" element={isAuthenticated ? <Withdraw /> : <Navigate to="/login" />} />
           <Route path="/transfer-to-card" element={isAuthenticated ? <TransferToCard /> : <Navigate to="/login" />} />
           <Route path="/bills" element={isAuthenticated ? <Bills /> : <Navigate to="/login" />} />
+          <Route path="/topup" element={isAuthenticated ? <MobileTopup /> : <Navigate to="/login" />} />
           <Route path="/kyc" element={isAuthenticated ? <KYC /> : <Navigate to="/login" />} />
           <Route path="/security" element={isAuthenticated ? <Security /> : <Navigate to="/login" />} />
+          <Route path="/devices" element={isAuthenticated ? <Devices /> : <Navigate to="/login" />} />
           <Route path="/cards" element={isAuthenticated ? <ConnectedCards /> : <Navigate to="/login" />} />
           <Route path="/statements" element={isAuthenticated ? <Statements /> : <Navigate to="/login" />} />
           <Route path="/cards/add" element={isAuthenticated ? <AddCard /> : <Navigate to="/login" />} />

@@ -20,7 +20,7 @@ const Insights = () => {
         setLoading(true);
         setError(null);
         try {
-            const res = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/analytics/insights', config);
+            const res = await axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/analytics/insights', config);
             setData(res.data);
         } catch (err) { 
             console.error(err); 
@@ -59,15 +59,15 @@ const Insights = () => {
 
             <div style={{ marginTop: '30px' }}>
                 <h4>Spending Trajectory</h4>
-                <div className="card" style={{ background: 'var(--bg-input)', border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <small style={{ color: 'var(--text-muted)' }}>Current</small>
-                        <h3 style={{ margin: 0 }}>${data.projection?.current || '0.00'}</h3>
+                <div className="card" style={{ background: 'var(--bg-input)', border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', padding: '15px 20px' }}>
+                    <div style={{ flex: 1 }}>
+                        <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Current</small>
+                        <h3 style={{ margin: 0, fontSize: '18px' }}>Rs. {data.projection?.current || '0.00'}</h3>
                     </div>
-                    <div style={{ fontSize: '24px' }}>➔</div>
-                    <div style={{ textAlign: 'right' }}>
-                        <small style={{ color: 'var(--primary)', fontWeight: '700' }}>Projected EOM</small>
-                        <h3 style={{ margin: 0, color: 'var(--primary)' }}>${data.projection?.projected || '0.00'}</h3>
+                    <div style={{ fontSize: '20px', opacity: 0.5 }}>➔</div>
+                    <div style={{ textAlign: 'right', flex: 1 }}>
+                        <small style={{ color: 'var(--primary)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>Projected EOM</small>
+                        <h3 style={{ margin: 0, color: 'var(--primary)', fontSize: '18px' }}>Rs. {data.projection?.projected || '0.00'}</h3>
                     </div>
                 </div>
             </div>
@@ -75,7 +75,7 @@ const Insights = () => {
             {/* Category Breakdown (New Section) */}
             <div style={{ marginTop: '40px' }}>
                 <h4>Spending by Category</h4>
-                <div className="card" style={{ height: '350px', padding: '20px', marginTop: '15px' }}>
+                <div className="card" style={{ height: '400px', padding: '10px', marginTop: '15px', display: 'flex', flexDirection: 'column' }}>
                     {data.categoryData?.length === 0 ? (
                         <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
                             No category data for this month.
@@ -86,9 +86,9 @@ const Insights = () => {
                                 <Pie
                                     data={data.categoryData}
                                     cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
+                                    cy="45%"
+                                    innerRadius="50%"
+                                    outerRadius="70%"
                                     paddingAngle={5}
                                     dataKey="value"
                                 >
@@ -96,8 +96,20 @@ const Insights = () => {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', background: 'var(--bg-card)', color: 'var(--text-main)' }} />
-                                <Legend verticalAlign="bottom" height={36} />
+                                <Tooltip 
+                                    contentStyle={{ borderRadius: '12px', border: 'none', background: 'var(--bg-card)', color: 'var(--text-main)', boxShadow: '0 5px 15px rgba(0,0,0,0.1)' }} 
+                                    formatter={(value) => [`Rs. ${value.toLocaleString()}`, 'Spent']}
+                                />
+                                <Legend 
+                                    verticalAlign="bottom" 
+                                    align="center"
+                                    iconType="circle"
+                                    wrapperStyle={{ 
+                                        paddingTop: '20px',
+                                        fontSize: '11px',
+                                        width: '100%'
+                                    }} 
+                                />
                             </PieChart>
                         </ResponsiveContainer>
                     )}

@@ -102,7 +102,7 @@ exports.getSpendingInsights = async (req, res) => {
                     : (healthScore < 40 
                         ? "Warning: Your spending velocity is high. I suggest pausing non-essential transfers."
                         : "You're doing great! You're on track to grow your wealth this month."),
-                anomaly: spikeCheck.length > 0 ? `Unusual spike detected: $${Math.abs(spikeCheck[0].amount)}` : null
+                anomaly: spikeCheck.length > 0 ? `Unusual spike detected: Rs. ${Math.abs(spikeCheck[0].amount)}` : null
             }
         });
 

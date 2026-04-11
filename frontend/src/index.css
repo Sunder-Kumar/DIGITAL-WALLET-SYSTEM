@@ -63,17 +63,23 @@ body {
 }
 
 /* --- Layout --- */
-.app-shell { display: flex; min-height: 100vh; flex-direction: column; }
+.app-shell { 
+  display: flex; 
+  min-height: 100vh; 
+  flex-direction: column;
+  overflow-x: hidden;
+}
 
 .mobile-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
+  padding: 0 20px;
   background: var(--bg-card);
   position: fixed;
   top: 0;
-  width: 100%;
+  left: 0;
+  right: 0;
   height: 70px;
   z-index: 1002;
   border-bottom: 1px solid var(--border);
@@ -84,9 +90,10 @@ body {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
-  padding-top: 90px; /* Offset for mobile header */
-  padding-bottom: 100px;
+  padding: 15px;
+  padding-top: 85px; /* Offset for mobile header (70px + 15px gap) */
+  padding-bottom: 100px; /* Space for bottom nav */
+  position: relative;
 }
 
 @media (min-width: 1024px) {
@@ -94,7 +101,8 @@ body {
   .mobile-header { display: none; }
   .main-content {
     padding: 40px;
-    padding-left: calc(var(--nav-width) + 40px);
+    margin-left: var(--nav-width);
+    width: calc(100% - var(--nav-width));
     padding-bottom: 40px;
   }
 }
@@ -103,6 +111,7 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 20px;
+  width: 100%;
 }
 
 @media (min-width: 768px) { .adaptive-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -112,9 +121,15 @@ body {
 .card {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: 20px;
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
+  width: 100%;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .card { padding: 24px; }
 }
 
 .input-field {

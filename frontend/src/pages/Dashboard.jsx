@@ -25,7 +25,7 @@ const Dashboard = () => {
         setUser(storedUser);
         fetchData();
 
-        const socket = io((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '');
+        const socket = io((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '');
         socket.on('connect', () => socket.emit('join_room', storedUser.id));
         
         socket.on('NOTIFICATION_RECEIVED', () => {
@@ -45,10 +45,10 @@ const Dashboard = () => {
     const fetchData = async () => {
         try {
             const [walletRes, txnRes, analyticsRes, cardsRes] = await Promise.all([
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet', config),
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/transactions', config),
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/analytics/insights', config),
-                axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/cards', config)
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet', config),
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/transactions', config),
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/analytics/insights', config),
+                axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet/cards', config)
             ]);
             
             setBalance(walletRes.data.balance);
@@ -97,8 +97,8 @@ const Dashboard = () => {
                         </div>
                         <h1 style={{ fontSize: '42px', margin: '15px 0' }}>
                             {showBalance 
-                                ? `$${parseFloat(balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}` 
-                                : '$ ••••'}
+                                ? `Rs. ${parseFloat(balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}` 
+                                : 'Rs. ••••'}
                         </h1>
                     </div>
                     
@@ -135,8 +135,8 @@ const Dashboard = () => {
                     <button className="btn btn-primary" onClick={() => navigate('/send')}>
                         <span>📤 Send</span>
                     </button>
-                    <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }} onClick={() => navigate('/request')}>
-                        <span>📥 Request</span>
+                    <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }} onClick={() => navigate('/topup')}>
+                        <span>📱 Mobile Load</span>
                     </button>
                     <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }} onClick={() => navigate('/add-money')}>
                         <span>💳 Add Funds</span>
@@ -160,10 +160,15 @@ const Dashboard = () => {
 
             {/* Middle Column: Activity & Insights */}
             <div style={{ gridColumn: 'span 1' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2>Recent Activity</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '0 5px' }}>
+                    <h2 style={{ fontSize: '20px' }}>Recent Activity</h2>
                     {transactions.length > 0 && (
-                        <button onClick={() => navigate('/transactions')} style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: '700' }}>See all</button>
+                        <button 
+                            onClick={() => navigate('/transactions')} 
+                            style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: '800', fontSize: '14px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                            See all
+                        </button>
                     )}
                 </div>
 
@@ -206,7 +211,7 @@ const Dashboard = () => {
                                         <small style={{ color: 'var(--text-muted)' }}>{new Date(txn.timestamp).toLocaleDateString()}</small>
                                     </div>
                                     <div className="txn-amount" style={{ color: isSender ? 'var(--text-main)' : 'var(--secondary)' }}>
-                                        {isSender ? '-' : '+'}{showBalance ? `$${parseFloat(txn.amount).toFixed(2)}` : '$ ••••'}
+                                        {isSender ? '-' : '+'}{showBalance ? `Rs. ${parseFloat(txn.amount).toFixed(2)}` : 'Rs. ••••'}
                                     </div>
                                 </div>
                             );
@@ -217,15 +222,57 @@ const Dashboard = () => {
 
             {/* Right Column: AI & Promotion */}
             <div style={{ gridColumn: 'span 1' }}>
-                <div className="card" style={{ background: 'var(--primary-light)', border: 'none', marginBottom: '20px', cursor: 'pointer' }} onClick={() => navigate('/insights')}>
-                    <h3 style={{ color: 'var(--primary)', marginBottom: '10px' }}>🤖 AI Smart Insights</h3>
-                    <p style={{ fontSize: '14px', lineHeight: '1.6' }}>{analytics?.aiCoach?.message || 'Analyzing your spending patterns...'}</p>
+                <div 
+                    className="card" 
+                    style={{ 
+                        background: 'linear-gradient(135deg, #1e293b, #0f172a)', 
+                        border: 'none', 
+                        marginBottom: '20px', 
+                        cursor: 'pointer',
+                        position: 'relative',
+                        color: 'white'
+                    }} 
+                    onClick={() => navigate('/insights')}
+                >
+                    <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'var(--primary)', color: 'white', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>PRO</div>
+                    <h3 style={{ color: 'white', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '20px' }}>🤖</span> AI Wealth Assistant
+                    </h3>
+                    <p style={{ fontSize: '13px', lineHeight: '1.6', opacity: 0.8, marginBottom: '0' }}>
+                        {analytics?.aiCoach?.message || 'Ready to optimize your portfolio? Complete your first transaction to activate institutional-grade financial modeling and personalized spending insights.'}
+                    </p>
                 </div>
 
-                <div className="card" style={{ background: 'var(--bg-app)', border: '1px dashed var(--border)' }}>
-                    <h3>✨ System Status</h3>
-                    <p style={{ fontSize: '13px', margin: '10px 0', color: 'var(--text-muted)' }}>All systems operational. Your account is secured with 256-bit encryption.</p>
-                    <button className="btn" onClick={() => navigate('/security')} style={{ background: 'var(--bg-card)', color: 'var(--text-main)', width: '100%' }}>View Security</button>
+                <div className="card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+                        <h3 style={{ fontSize: '16px', fontWeight: '800', margin: 0 }}>Network Status</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(34, 197, 94, 0.1)', padding: '4px 10px', borderRadius: '20px' }}>
+                            <div style={{ width: '8px', height: '8px', background: '#22c55e', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
+                            <span style={{ fontSize: '10px', fontWeight: '900', color: '#166534', textTransform: 'uppercase' }}>Operational</span>
+                        </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+                        <div style={{ fontSize: '24px' }}>🛡️</div>
+                        <p style={{ fontSize: '12px', margin: 0, color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                            Your assets are protected by **institutional-grade AES-256 encryption** and multi-factor biometric authentication.
+                        </p>
+                    </div>
+
+                    <button 
+                        className="btn" 
+                        onClick={() => navigate('/security')} 
+                        style={{ 
+                            background: 'var(--bg-input)', 
+                            color: 'var(--text-main)', 
+                            width: '100%', 
+                            fontSize: '12px', 
+                            height: '45px',
+                            borderRadius: '12px'
+                        }}
+                    >
+                        Review Security Protocol
+                    </button>
                 </div>
             </div>
 

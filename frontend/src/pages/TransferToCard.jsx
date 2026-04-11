@@ -22,14 +22,14 @@ const TransferToCard = () => {
 
     const fetchBalance = async () => {
         try {
-            const res = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet', { headers });
+            const res = await axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet', { headers });
             setBalance(parseFloat(res.data.balance));
         } catch (err) { console.error(err); }
     };
 
     const fetchCards = async () => {
         try {
-            const res = await axios.get((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/cards', { headers });
+            const res = await axios.get((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet/cards', { headers });
             setCards(res.data);
             if (res.data.length > 0) {
                 const primary = res.data.find(c => c.is_primary) || res.data[0];
@@ -45,7 +45,7 @@ const TransferToCard = () => {
         
         setLoading(true);
         try {
-            await axios.post((import.meta.env.VITE_API_URL || 'https://192.168.0.38:5000') + '/api/wallet/transfer-to-card', {
+            await axios.post((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/wallet/transfer-to-card', {
                 amount: parseFloat(amount),
                 card_id: selectedCard.card_id,
                 pin
@@ -64,7 +64,7 @@ const TransferToCard = () => {
             <div style={{ padding: '24px', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <form onSubmit={handleTransfer} className="card" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', padding: '40px 20px' }}>
                     <h2 style={{ marginBottom: '10px' }}>Authorize Transfer</h2>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '30px' }}>Confirm transfer of <strong>${parseFloat(amount).toLocaleString()}</strong> to your <strong>{selectedCard?.brand} card (•••• {selectedCard?.last4})</strong></p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '30px' }}>Confirm transfer of <strong>Rs. {parseFloat(amount).toLocaleString()}</strong> to your <strong>{selectedCard?.brand} card (•••• {selectedCard?.last4})</strong></p>
                     
                     <input 
                         type="password" 
@@ -108,7 +108,7 @@ const TransferToCard = () => {
             <div className="card" style={{ textAlign: 'center', background: 'var(--bg-input)', border: 'none', marginBottom: '30px', padding: '30px' }}>
                 <small style={{ color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>AMOUNT TO TRANSFER</small>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', marginTop: '15px' }}>
-                    <span style={{ fontSize: '30px', fontWeight: '800', marginRight: '5px' }}>$</span>
+                    <span style={{ fontSize: '30px', fontWeight: '800', marginRight: '5px' }}>Rs.</span>
                     <input 
                         type="number" 
                         value={amount} 
@@ -118,7 +118,7 @@ const TransferToCard = () => {
                     />
                 </div>
                 <div style={{ marginTop: '10px', fontSize: '13px', fontWeight: '700', color: (balance - parseFloat(amount || 0) < 0) ? 'var(--danger)' : 'var(--primary)' }}>
-                    Wallet Balance: ${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    Wallet Balance: Rs. {balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </div>
             </div>
 

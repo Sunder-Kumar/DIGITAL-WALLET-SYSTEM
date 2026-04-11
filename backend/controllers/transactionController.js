@@ -119,7 +119,7 @@ exports.sendMoney = async (req, res) => {
         
         // Notify Receiver
         const receiverTitle = "Payment Received";
-        const receiverMsg = `💰 Received $${transferAmount.toNumber()} from ${req.user.name}`;
+        const receiverMsg = `💰 Received Rs. ${transferAmount.toNumber()} from ${req.user.name}`;
         const [rNotif] = await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [receiver_id, receiverTitle, receiverMsg, transactionId]);
         
         if (global.io) {
@@ -139,7 +139,7 @@ exports.sendMoney = async (req, res) => {
 
         // Notify Sender
         const senderTitle = "Payment Sent";
-        const senderMsg = `💸 Sent $${transferAmount.toNumber()} to ${receiver_email}`;
+        const senderMsg = `💸 Sent Rs. ${transferAmount.toNumber()} to ${receiver_email}`;
         const [sNotif] = await db.query("INSERT INTO Notifications (user_id, title, message, type, transaction_id) VALUES (?, ?, ?, 'payment', ?)", [sender_id, senderTitle, senderMsg, transactionId]);
 
         if (global.io) {
@@ -159,7 +159,7 @@ exports.sendMoney = async (req, res) => {
 
         // Security Alert if flagged
         if (status === 'flagged' || riskLevel !== 'low') {
-            const securityMsg = `⚠️ Unusual activity detected. Your transaction of $${amount} was flagged for review.`;
+            const securityMsg = `⚠️ Unusual activity detected. Your transaction of Rs. ${amount} was flagged for review.`;
             await db.query("INSERT INTO Notifications (user_id, title, message, type) VALUES (?, ?, ?, 'security')", [sender_id, "Security Alert", securityMsg]);
             
             if (global.io) {
@@ -172,7 +172,7 @@ exports.sendMoney = async (req, res) => {
             }
         }
 
-        auditService.log(sender_id, 'LEDGER_TXN_SUCCESS', `Txn ${transactionId}: $${amount} moved using Double-Entry. Key: ${idempotencyKey}`, req.ip);
+        auditService.log(sender_id, 'LEDGER_TXN_SUCCESS', `Txn ${transactionId}: Rs. ${amount} moved using Double-Entry. Key: ${idempotencyKey}`, req.ip);
 
         res.json({ 
             message: status === 'flagged' ? "Flagged for review" : "Transfer complete", 
